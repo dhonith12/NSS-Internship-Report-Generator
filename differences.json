@@ -1,0 +1,38 @@
+{
+  "Name": "TIRUMALASETTI VEERA NAGA SAI DHONI",
+  "Registration Number": "L25CS423",
+  "Class": "II B.Tech II Semester, CSE",
+  "Internship Hours": "42 hours",
+  "Internship Period": "23rd May 2026 to 28th May 2026",
+  "Village Name": "Durga Agraharam",
+  "Mandal": "Vijayawada (Urban)",
+  "District": "NTR District",
+  "State": "Andhra Pradesh",
+  "Pincode": "",
+  "Faculty Coordinator": "",
+  "Activities": "Cleaning of Village Streets and Public Areas, Tree Plantation Drives and Teaching Underprivileged Children",
+  "Activity 1": {
+    "Name": "Cleaning Public Streets and Surrounding Areas",
+    "Theme": "Environmental Sanitation and Community Cleanliness",
+    "Starting Date": "23/05/2026",
+    "Location": "Durga Agraharam, Vijayawada, NTR District, Andhra Pradesh",
+    "Ending Date": "24/05/2026",
+    "Total Hours": "14 Hours"
+  },
+  "Activity 2": {
+    "Name": "Tree Plantation Drives",
+    "Theme": "Environment & Sustainability Activities",
+    "Starting Date": "25/05/2026",
+    "Location": "Durga Agraharam, Vijayawada, NTR District, Andhra Pradesh",
+    "Ending Date": "26/05/2026",
+    "Total Hours": "14 Hours"
+  },
+  "Activity 3": {
+    "Name": "Teaching Underprivileged Children",
+    "Theme": "Education & Community Development Activities",
+    "Starting Date": "27/05/2026",
+    "Location": "Durga Agraharam, Vijayawada, NTR District, Andhra Pradesh",
+    "Ending Date": "28/05/2026",
+    "Total Hours": "14 Hours"
+  }
+}
