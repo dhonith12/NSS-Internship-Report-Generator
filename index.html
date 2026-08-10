@@ -20,6 +20,7 @@
       <div>
         <h1>NSS Internship Report Generator</h1>
         <p>Created By Dhoni Tirumalasetti</p>
+        <div class="logo-stats" id="statsLine"></div>
       </div>
     </div>
     <div class="header-actions no-print">
@@ -27,6 +28,9 @@
         title="Switch theme: Light / Dark / System">&#9684; Auto</button>
       <button class="btn btn-outline" onclick="loadDemo()">Load Demo</button>
       <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+      <button class="btn btn-outline" id="editBtn" onclick="toggleEdit()"
+        title="Edit the document text directly in the preview">&#9998; Edit</button>
+      <button class="btn btn-outline" onclick="openAdminDialog()" title="Admin panel (password protected)">&#128274; Admin Panel</button>
       <button class="btn btn-download" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
     </div>
   </header>
@@ -35,6 +39,7 @@
     <span class="wt-icon">&#128075;</span>
     <span class="wt-msg">Welcome! For the most interactive experience, open this report generator in <b>Desktop Mode</b>.</span>
   </div>
+  <div class="app-toast no-print" id="appToast" role="status"></div>
 
   <div class="wrapper">
     <aside class="form-panel">
@@ -154,8 +159,6 @@
       <div class="preview-toolbar no-print">
         <h2><span class="dot"></span> Live Preview</h2>
         <div class="toolbar-right">
-          <button class="btn btn-outline" id="editBtn" onclick="toggleEdit()"
-            title="Edit the document text directly in the preview">&#9998; Edit</button>
           <div class="meta" id="previewMeta"></div>
         </div>
       </div>
@@ -208,6 +211,7 @@
   </div>
 
     <script src="js/app.js"></script>
+    <div id="modalRoot"></div>
 </body>
 
 </html>

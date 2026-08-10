@@ -279,9 +279,12 @@
       b += '<li>Improved communication and interpersonal skills.</li>';
       b += '<li>Strengthened teamwork, leadership, and coordination.</li>';
       b += '<li>Enhanced problem-solving and organizational abilities.</li></ul>';
+      function dayPhotos(di) {
+        return ((a.days[di] && a.days[di].img) || []).filter(function (im) { return im && im.src; }).length;
+      }
       function photoPage(di, cap, pn) {
         var slots = (a.days[di] && a.days[di].img) || [];
-        var imgs = slots.filter(function (x) { return x && x.src; });
+        var photos = dayPhotos(di);
         function cell(k) {
           var im = slots[k];
           if (!im || !im.src) return '<div class="pframe"><span class="pf-ph">Photo ' + (k + 1) + '</span></div>'
@@ -301,10 +304,54 @@
             + '<div class="figno">Fig. ' + (k + 1) + '</div>';
         }
         var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '') + ' PHOTOS / EVIDENCE</div>';
-        var cell3 = (imgs.length === 4) ? cell(3) : ('<div class="pcap">' + esc(cap) + '</div>');
+        var dayTitle = 'DAY ' + (di + 1);
+        var dayText = String(cap || '').replace(/^DAY\s*\d+\s*[:\-–]\s*/i, '').trim();
+        function textCell() {
+          return '<div class="pcap"><div class="pcap-title">' + dayTitle + '</div>'
+            + '<div class="pcap-text">' + esc(dayText) + '</div></div>';
+        }
+        if (photos < 4) {
+          b += '<table class="pgrid"><tr><td>' + cell(0) + '</td><td>' + cell(1) + '</td></tr>'
+            + '<tr><td>' + cell(2) + '</td><td>' + textCell() + '</td></tr></table>';
+          return pageShell(b, pn);
+        }
         b += '<table class="pgrid"><tr><td>' + cell(0) + '</td><td>' + cell(1) + '</td></tr>'
-          + '<tr><td>' + cell(2) + '</td><td>' + cell3 + '</td></tr></table>';
+          + '<tr><td>' + cell(2) + '</td><td>' + cell(3) + '</td></tr></table>';
+        b += '<div class="daycap"><div class="daycap-title">' + dayTitle + '</div>'
+          + '<div class="daycap-text">' + esc(dayText) + '</div></div>';
         return pageShell(b, pn);
+      }
+      function photoPage2(pn) {
+        function ccell(di, k) {
+          var slots = (a.days[di] && a.days[di].img) || [];
+          var im = slots[k];
+          if (!im || !im.src) return '<div class="pframe cframe"><span class="pf-ph">Photo ' + (k + 1) + '</span></div>'
+            + '<div class="figno">Fig. ' + (k + 1) + '</div>';
+          var z = im.z || 1, x = im.x || 0, y = im.y || 0;
+          var adj = (z !== 1 || x !== 0 || y !== 0);
+          var t = 'translate(' + x + 'px,' + y + 'px) scale(' + z + ')';
+          return '<div class="pframe cframe">'
+            + '<img src="' + im.src + '" draggable="false" data-act="' + a.id + '" data-di="' + di + '" data-ki="' + k + '" style="transform:' + t + '">'
+            + '<div class="pctrl no-print">'
+            + '<button type="button" class="pbtn" data-act="' + a.id + '" data-di="' + di + '" data-ki="' + k + '" data-zoom="-0.2" title="Zoom out">\u2212</button>'
+            + '<span class="pz">' + Math.round(z * 100) + '%</span>'
+            + '<button type="button" class="pbtn" data-act="' + a.id + '" data-di="' + di + '" data-ki="' + k + '" data-zoom="0.2" title="Zoom in">+</button>'
+            + (adj ? '<button type="button" class="pbtn" data-act="' + a.id + '" data-di="' + di + '" data-ki="' + k + '" data-reset="1" title="Reset">\u27f2</button>' : '')
+            + '</div></div>'
+            + '<div class="figno">Fig. ' + (k + 1) + '</div>';
+        }
+        function ccap(di, cap) {
+          var t = String(cap || '').replace(/^DAY\s*\d+\s*[:\-–]\s*/i, '').trim();
+          return '<div class="pcap cframe"><div class="pcap-title">DAY ' + (di + 1) + '</div>'
+            + '<div class="pcap-text">' + esc(t) + '</div></div>';
+        }
+        var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '') + ' PHOTOS / EVIDENCE</div>';
+        b += '<table class="pgrid3"><tr><td>' + ccell(0, 0) + '</td><td>' + ccell(0, 1) + '</td><td>' + ccap(0, cap1) + '</td></tr>'
+          + '<tr><td>' + ccell(1, 0) + '</td><td>' + ccell(1, 1) + '</td><td>' + ccap(1, cap2) + '</td></tr></table>';
+        return pageShell(b, pn);
+      }
+      if (dayPhotos(0) <= 2 && dayPhotos(1) <= 2) {
+        return pageShell(b, String(s)) + photoPage2(String(s + 1));
       }
       return pageShell(b, String(s)) + photoPage(0, cap1, String(s + 1)) + photoPage(1, cap2, String(s + 2));
     }
@@ -342,12 +389,23 @@
       html += coverPage(d);
 
       /* CERTIFICATE */
+      var certCls = val('f_class');
+      if (!/\bCSE\b/i.test(certCls)) certCls = certCls + ', CSE';
+      function lc(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+      function joinList(arr) {
+        if (!arr || !arr.length) return '';
+        if (arr.length === 1) return arr[0];
+        return arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+      }
+      var certActNames = joinList(d.acts.map(function (a) { return esc(a.name || '[Name of the Activity]'); }));
+      var focusList = d.acts.map(function (a) {
+        return lc(a.name || 'community service') + ' to promote ' + lc(a.theme || 'social welfare');
+      });
+      var certFocus = joinList(focusList.map(esc)) || 'various social awareness, community welfare, and public service initiatives';
       html += pageShell('<h1 class="center">CERTIFICATE</h1>'
-        + '<p>This is to certify that Mr. <b>' + val('f_name') + '</b>, a student of ' + val('f_class') + ', CSE, bearing Registration Number <b>' + val('f_regno') + '</b>, has successfully completed the NSS Social Internship Programme by carrying out community service activities for <b>' + val('f_hours') + ' hours</b> during the period <b>' + esc(d.period) + '</b>, under the guidance of the NSS Programme Officer.</p>'
-        + '<p>During the internship, I actively participated in various community service activities at ' + esc(d.village) + ', ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ' \u2013 ' + esc(d.pincode) + '. The activities carried out were ' + esc(actList) + '.</p>'
-        + '<p>The internship primarily focused on ' + esc(actFocus) + '. These activities were completed with sincerity, dedication, and active participation under the National Service Scheme (NSS), fostering environmental responsibility, educational development, and community awareness while strengthening community engagement and social responsibility.</p>'
-        + '<p>As a participant, I gained practical exposure to rural life and community development, and developed valuable skills in teamwork, communication, leadership, and social responsibility. The experience inspired me to continue contributing to the welfare of society and to serve the community with sincerity and dedication in the future.</p>'
-        + '<p>Throughout the internship, I maintained discipline, punctuality, and a spirit of teamwork. I carried out all the assigned duties sincerely and cooperated with the NSS Programme Officer, faculty members, and fellow volunteers to ensure the successful completion of the programme.</p>'
+        + '<p>This is to certify that Mr. <b>' + val('f_name') + '</b>, a student of ' + certCls + ', bearing Registration Number <b>' + val('f_regno') + '</b>, has successfully completed the NSS Social Internship Programme by carrying out community service activities for <b>' + val('f_hours') + ' hours</b> during the period <b>' + esc(d.period) + '</b>, under the guidance of the NSS Programme Officer.</p>'
+        + '<p>During the internship, I actively participated in various community service activities at ' + esc(d.village) + ', ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + '. The activities included ' + certActNames + '.</p>'
+        + '<p>The internship primarily focused on ' + certFocus + '. The internship focused on promoting environmental protection, environmental sanitation, improving education access for underprivileged populations, sustainable development, and social responsibility. These activities were completed with sincerity, dedication, and active participation under the National Service Scheme (NSS), fostering environmental responsibility, educational development, and community awareness while strengthening community engagement and social responsibility.</p>'
         + '<table class="sign"><tr><td>NSS Programme Officer</td><td style="text-align:right">Professors HOD, CSE.</td></tr></table>', 'i', 'cert');
 
       /* ACKNOWLEDGEMENT */
@@ -660,6 +718,12 @@
     }
     function saveAsPdf() {
       closeSaveDialog();
+      bumpGenerated();
+      submitReport();
+      var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+      var orig = document.title;
+      document.title = (name ? name + '_' : '') + 'Nss_Report.pdf';
+      window.onafterprint = function () { document.title = orig; };
       window.print();
     }
     document.addEventListener('keydown', function (e) {
@@ -667,7 +731,10 @@
         e.preventDefault();
         openSaveDialog();
       }
-      if (e.key === 'Escape') { closeSaveDialog(); }
+      if (e.key === 'Escape') {
+        closeSaveDialog();
+        closeModal('adminModal');
+      }
     });
 
     /* Auto-fill the cover-page name with initials from Student Details */
@@ -736,8 +803,8 @@
       render();
     }
 
-    document.addEventListener('input', function () { if (!editingEnabled) render(); });
-    document.addEventListener('change', function () { if (!editingEnabled) render(); });
+    document.addEventListener('input', function () { if (!editingEnabled) render(); autoSave(); });
+    document.addEventListener('change', function () { if (!editingEnabled) render(); autoSave(); });
     window.addEventListener('resize', function () { fitDocScale(); });
     window.addEventListener('scroll', function () {
       var h = document.querySelector('.app-header');
@@ -783,6 +850,332 @@
       else { window.addEventListener('load', function () { setTimeout(showToast, 300); }); }
     })();
 
+    /* ================= Toast ================= */
+    function toast(msg, ms) {
+      var el = document.getElementById('appToast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(el._t);
+      el._t = setTimeout(function () { el.classList.remove('show'); }, ms || 2600);
+    }
+
+    /* ================= Visits / Generated counters ================= */
+    var globalStats = null;
+    function lsi(k) { try { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; } catch (e) { return 0; } }
+    function lss(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+    function bumpVisit() {
+      try {
+        if (!localStorage.getItem('nss_viewed')) { lss('nss_visits', lsi('nss_visits') + 1); localStorage.setItem('nss_viewed', '1'); }
+      } catch (e) { }
+    }
+    function bumpGenerated() { lss('nss_gens', lsi('nss_gens') + 1); renderStats(); }
+    function renderStats() {
+      var el = document.getElementById('statsLine');
+      if (!el) return;
+      var v = lsi('nss_visits'), g = lsi('nss_gens');
+      if (globalStats) { v = Math.max(v, globalStats.visits || 0); g = Math.max(g, globalStats.generates || 0); }
+      el.innerHTML = '\uD83D\uDC41 Views: <b>' + v + '</b> &nbsp;\u00B7&nbsp; \uD83D\uDCC4 Generated: <b>' + g + '</b>';
+    }
+    function fetchGlobalStats() {
+      var cfg = ghConfig();
+      fetch('https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/main/data/stats.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (s) { if (s && typeof s === 'object') { globalStats = s; renderStats(); } })
+        .catch(function () { });
+    }
+
+    /* ================= Silent auto-save (local, per device) ================= */
+    function profKey(name) { return 'nss_data_' + String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/gi, '_'); }
+    function collectProfileData() {
+      var d = {};
+      document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) { d[el.id] = el.value; });
+      d.activities = state.activities.map(function (a) {
+        return {
+          id: a.id, name: rawVal('act_' + a.id + '_name'), theme: rawVal('act_' + a.id + '_theme'),
+          start: rawVal('act_' + a.id + '_start'), end: rawVal('act_' + a.id + '_end'),
+          location: rawVal('act_' + a.id + '_location'), hours: rawVal('act_' + a.id + '_hours'),
+          cap0: rawVal('act_' + a.id + '_cap0'), cap1: rawVal('act_' + a.id + '_cap1')
+        };
+      });
+      return d;
+    }
+    function autoSave() {
+      var nm = ($('f_name') && $('f_name').value.trim()) || '';
+      if (!nm) return;
+      try {
+        localStorage.setItem(profKey(nm), JSON.stringify(collectProfileData()));
+        localStorage.setItem('nss_last_user', nm);
+      } catch (e) { }
+    }
+    function restoreLastProfile() {
+      var nm = '';
+      try { nm = localStorage.getItem('nss_last_user') || ''; } catch (e) { }
+      if (!nm) return;
+      var data = null;
+      try { data = JSON.parse(localStorage.getItem(profKey(nm))); } catch (e) { }
+      if (!data) return;
+      document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) {
+        if (data[el.id] != null) el.value = data[el.id];
+      });
+      state.activities = (data.activities || []).map(function (a) {
+        return { id: a.id, name: a.name, theme: a.theme, start: a.start, end: a.end, location: a.location, hours: a.hours, cap0: a.cap0, cap1: a.cap1, days: [{ img: [] }, { img: [] }] };
+      });
+      while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
+      actId = Math.max(actId, (state.activities[state.activities.length - 1].id || 0) + 1);
+    }
+
+    /* ================= Repository config (embedded token) ================= */
+    var GH_TOKEN = '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';
+    function ghConfig() {
+      return { token: GH_TOKEN, owner: 'dhonith12', repo: 'NSS-Internship-Report-Generator' };
+    }
+    function buildModal(id, inner) {
+      var old = document.getElementById(id);
+      if (old) old.remove();
+      var root = document.getElementById('modalRoot');
+      if (!root) return;
+      var m = document.createElement('div');
+      m.id = id;
+      m.className = 'save-modal no-print';
+      m.setAttribute('role', 'dialog');
+      m.setAttribute('aria-modal', 'true');
+      m.innerHTML = '<div class="save-modal-backdrop" onclick="closeModal(\'' + id + '\')"></div>'
+        + '<div class="save-modal-card"><button class="save-modal-close" onclick="closeModal(\'' + id + '\')" title="Close" aria-label="Close">&#10005;</button>'
+        + inner + '</div>';
+      root.appendChild(m);
+    }
+    function closeModal(id) { var m = document.getElementById(id); if (m) m.remove(); }
+
+    /* ================= Auto-submit report to repository ================= */
+    function ts() { var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()); }
+    function slug(s) { return String(s || '').trim().replace(/\s+/g, '_').replace(/[^A-Za-z0-9_.-]/g, ''); }
+    function xmlEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function b64Encode(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function b64Decode(b64) { return decodeURIComponent(escape(atob(b64))); }
+    function dataUrlToB64(u) { var i = String(u).indexOf(','); return i >= 0 ? u.slice(i + 1) : u; }
+    function compressImage(dataUrl, maxDim, quality) {
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            var c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(img.width * scale));
+            c.height = Math.max(1, Math.round(img.height * scale));
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            resolve(c.toDataURL('image/jpeg', quality));
+          } catch (e) { resolve(dataUrl); }
+        };
+        img.onerror = function () { resolve(dataUrl); };
+        img.src = dataUrl;
+      });
+    }
+    function buildXML(d) {
+      var now = new Date().toISOString();
+      var x = '<?xml version="1.0" encoding="UTF-8"?>\n<NSSReport>\n';
+      x += '  <SubmittedOn>' + xmlEsc(now) + '</SubmittedOn>\n';
+      x += '  <UserName>' + xmlEsc(d.name) + '</UserName>\n';
+      x += '  <Details>\n';
+      [['Name', 'name'], ['RegistrationNumber', 'regno'], ['Class', 'class'], ['InternshipHours', 'hours'], ['Period', 'period'],
+        ['Theme', 'theme'], ['Branch', 'branch'], ['Section', 'section'], ['NSSUnit', 'sem'], ['ProgrammeOfficer', 'po'],
+        ['Department', 'dept'], ['CoverName', 'coverName'], ['Population', 'population'], ['Village', 'village'],
+        ['Mandal', 'mandal'], ['District', 'district'], ['State', 'state'], ['Pincode', 'pincode'],
+        ['Coordinator', 'coordinator'], ['Annexure', 'annex']].forEach(function (f) {
+          x += '    <' + f[0] + '>' + xmlEsc(d[f[1]]) + '</' + f[0] + '>\n';
+        });
+      x += '  </Details>\n';
+      x += '  <CommunityProfile>' + xmlEsc(rawVal('f_profile')) + '</CommunityProfile>\n';
+      x += '  <Occupations>' + xmlEsc(rawVal('f_occupations')) + '</Occupations>\n';
+      x += '  <SocialIssues>' + xmlEsc(rawVal('f_social_issues')) + '</SocialIssues>\n';
+      x += '  <Activities>\n';
+      d.acts.forEach(function (a) {
+        x += '    <Activity id="' + xmlEsc(String(a.id)) + '">\n';
+        x += '      <Name>' + xmlEsc(a.name) + '</Name>\n';
+        x += '      <Theme>' + xmlEsc(a.theme) + '</Theme>\n';
+        x += '      <Location>' + xmlEsc(a.location) + '</Location>\n';
+        x += '      <StartDate>' + xmlEsc(a.start) + '</StartDate>\n';
+        x += '      <EndDate>' + xmlEsc(a.end) + '</EndDate>\n';
+        x += '      <TotalHours>' + xmlEsc(a.hours) + '</TotalHours>\n';
+        ['cap0', 'cap1'].forEach(function (capKey, di) {
+          x += '      <Day number="' + (di + 1) + '"><Caption>' + xmlEsc(a[capKey]) + '</Caption></Day>\n';
+        });
+        x += '    </Activity>\n';
+      });
+      x += '  </Activities>\n</NSSReport>\n';
+      return x;
+    }
+    function getJson(cfg, apiPath) {
+      return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/' + apiPath, {
+        headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' }
+      }).then(function (r) { return r.json(); });
+    }
+    function putFile(cfg, path, b64, msg, sha) {
+      var payload = { message: msg, content: b64, branch: 'main' };
+      if (sha) payload.sha = sha;
+      return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + path, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.content) return j;
+        throw new Error((j && j.message) || 'Upload failed: ' + path);
+      });
+    }
+    function deleteFile(cfg, path, sha) {
+      return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + path, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' },
+        body: JSON.stringify({ message: 'Remove stale submission file', path: path, sha: sha, branch: 'main' })
+      }).then(function (r) { return r.status; });
+    }
+    function listUserFiles(cfg, user) {
+      return getJson(cfg, 'contents/data/' + user).then(function (top) {
+        if (!Array.isArray(top)) return [];
+        var out = top.filter(function (it) { return it.type === 'file'; }).map(function (it) { return { path: it.path, sha: it.sha }; });
+        var imgDir = top.filter(function (it) { return it.type === 'dir' && it.name === 'images'; })[0];
+        if (!imgDir) return out;
+        return getJson(cfg, 'contents/' + imgDir.path).then(function (imgs) {
+          if (Array.isArray(imgs)) {
+            imgs.forEach(function (it) { if (it.type === 'file') out.push({ path: it.path, sha: it.sha }); });
+          }
+          return out;
+        });
+      });
+    }
+    function syncStats(cfg) {
+      var v = lsi('nss_visits'), g = lsi('nss_gens');
+      var sv = lsi('nss_sync_visits'), sg = lsi('nss_sync_gens');
+      var dv = Math.max(0, v - sv), dg = Math.max(0, g - sg);
+      return getJson(cfg, 'contents/data/stats.json').then(function (meta) {
+        var stats = { visits: 0, generates: 0 };
+        if (meta && meta.content) { try { stats = JSON.parse(b64Decode(meta.content)); } catch (e) { } }
+        stats.visits = (stats.visits || 0) + dv;
+        stats.generates = (stats.generates || 0) + dg;
+        var payload = { message: 'Update report statistics', content: b64Encode(JSON.stringify(stats, null, 2)), branch: 'main' };
+        if (meta && meta.sha) payload.sha = meta.sha;
+        return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/data/stats.json', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' },
+          body: JSON.stringify(payload)
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j && j.content) {
+            lss('nss_sync_visits', v); lss('nss_sync_gens', g);
+            try { globalStats = JSON.parse(b64Decode(j.content)); } catch (e) { }
+            renderStats();
+            return j;
+          }
+          throw new Error((j && j.message) || 'Stats update failed');
+        });
+      });
+    }
+    async function submitReport() {
+      try {
+        var d = collect();
+        var nm = (d.name || '').trim();
+        if (!nm) return;
+        var cfg = ghConfig();
+        if (!cfg.token) return;
+        var user = slug(nm) || 'user';
+        var base = 'data/' + user;
+        var files = [];
+        files.push({ path: base + '/' + user + '.xml', b64: b64Encode(buildXML(d)), msg: 'Auto-submit report: ' + nm });
+        var imgList = [];
+        function addImg(im, file) { if (im && im.src) imgList.push({ path: base + '/images/' + file, src: im.src }); }
+        addImg(state.coverImg, 'cover.jpg');
+        addImg(state.geoImg[0], 'map.jpg');
+        addImg(state.certImg, 'certificate.jpg');
+        d.acts.forEach(function (a) {
+          (a.days || []).forEach(function (day, di) {
+            (day.img || []).forEach(function (im, ki) { addImg(im, 'activity_' + a.id + '_day' + (di + 1) + '_photo' + (ki + 1) + '.jpg'); });
+          });
+        });
+        for (var i = 0; i < imgList.length; i++) {
+          var c = await compressImage(imgList[i].src, 1200, 0.62);
+          files.push({ path: imgList[i].path, b64: dataUrlToB64(c), msg: 'Auto-submit report image: ' + nm });
+        }
+        var oldFiles = await listUserFiles(cfg, user);
+        var newPaths = {};
+        files.forEach(function (f) { newPaths[f.path] = true; });
+        var stale = oldFiles.filter(function (f) { return !newPaths[f.path]; });
+        for (var s = 0; s < stale.length; s++) { await deleteFile(cfg, stale[s].path, stale[s].sha); }
+        for (var f = 0; f < files.length; f++) {
+          var sha = null;
+          for (var o = 0; o < oldFiles.length; o++) { if (oldFiles[o].path === files[f].path) { sha = oldFiles[o].sha; break; } }
+          await putFile(cfg, files[f].path, files[f].b64, files[f].msg, sha);
+        }
+        await syncStats(cfg);
+        toast('Report saved & synced to the repository \u2714');
+        fetchGlobalStats();
+      } catch (err) {
+        toast('Sync failed: ' + ((err && err.message) ? err.message : String(err)));
+      }
+    }
+
+    /* ================= Admin (password-protected data view) ================= */
+    var ADMIN_PASS = 'adminacess';
+    function openAdminDialog() {
+      buildModal('adminModal',
+        '<h3>&#128274; Admin only</h3>'
+        + '<div class="field"><label>Password</label><input id="admin_pass" type="password" placeholder="Password"></div>'
+        + '<div class="save-modal-actions"><button class="btn btn-download" onclick="tryAdmin()">Unlock</button></div>'
+        + '<div id="adminBody" style="margin-top:14px"></div>');
+      var ip = document.getElementById('admin_pass');
+      if (ip) ip.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryAdmin(); });
+    }
+    function tryAdmin() {
+      var pass = ($('admin_pass') && $('admin_pass').value) || '';
+      var body = document.getElementById('adminBody');
+      if (!body) return;
+      if (pass !== ADMIN_PASS) { body.innerHTML = '<p style="color:#dc2626">Incorrect password.</p>'; return; }
+      var cfg = ghConfig();
+      if (!cfg.token) {
+        body.innerHTML = '<p>No GitHub token configured — add it in the file <code>js/app.js</code> (the <code>GH_TOKEN</code> constant) to browse data.</p>';
+        return;
+      }
+      body.innerHTML = '<p>Loading\u2026</p>';
+      getJson(cfg, 'contents/data').then(function (list) {
+        if (!Array.isArray(list)) { body.innerHTML = '<p>No data folder yet. Submit a report first.</p>'; return; }
+        var html = '<h4>Users</h4><ul class="admin-list">';
+        list.forEach(function (it) {
+          if (it.type === 'dir' && it.name !== '.github') html += '<li><a href="#" onclick="event.preventDefault(); viewUser(\'' + it.name.replace(/'/g, "\\'") + '\')">' + esc(it.name) + '</a></li>';
+        });
+        html += '</ul><div id="adminUserBody"></div>';
+        body.innerHTML = html;
+      }).catch(function (e) { body.innerHTML = '<p style="color:#dc2626">Failed: ' + esc(e.message || e) + '</p>'; });
+    }
+    function viewUser(user) {
+      var cfg = ghConfig();
+      var ub = document.getElementById('adminUserBody');
+      if (!ub) return;
+      ub.innerHTML = '<p>Loading\u2026</p>';
+      getJson(cfg, 'contents/data/' + user).then(function (list) {
+        if (!Array.isArray(list)) { ub.innerHTML = '<p>No files.</p>'; return; }
+        var xmlItem = list.filter(function (it) { return /\.xml$/i.test(it.name); })[0];
+        var imgs = list.filter(function (it) { return it.type === 'dir' && it.name === 'images'; })[0];
+        var html = '<h4>' + esc(user) + '</h4><ul class="admin-list">';
+        list.forEach(function (it) { html += '<li>' + esc(it.name) + (it.type === 'dir' ? '/' : '') + '</li>'; });
+        html += '</ul>';
+        if (xmlItem) {
+          html += '<div class="field"><label>XML</label><textarea rows="6" readonly id="adminXml"></textarea></div>';
+        }
+        if (imgs) {
+          html += '<p>Images: <a href="https://github.com/' + cfg.owner + '/' + cfg.repo + '/tree/main/' + imgs.path + '" target="_blank" rel="noopener">view on GitHub</a></p>';
+        }
+        ub.innerHTML = html;
+        if (xmlItem) {
+          fetch(xmlItem.download_url).then(function (r) { return r.text(); }).then(function (t) {
+            var ta = document.getElementById('adminXml');
+            if (ta) ta.value = t;
+          });
+        }
+      }).catch(function (e) { ub.innerHTML = '<p style="color:#dc2626">Failed: ' + esc(e.message || e) + '</p>'; });
+    }
+
+    bumpVisit();
+    renderStats();
+    fetchGlobalStats();
+    restoreLastProfile();
     renderActivities();
     render();
   

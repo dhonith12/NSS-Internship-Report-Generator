@@ -44,14 +44,19 @@
 | ⚡ | **Real-time Live Preview** | Every keystroke instantly rebuilds the A4 document on the right panel — no render button needed |
 | 📄 | **Complete Report Structure** | Cover, certificate, acknowledgement, table of contents, introduction, objectives, community profile, village map, occupations, internship activities, photo evidence, learning outcomes, challenges, social impact, conclusion & annexures |
 | 📐 | **College-Format A4 Layout** | Every section fits on a **single A4 page** — Times New Roman 12pt body, 16pt bold main headings, 14pt bold subheadings, 1.5 line spacing, justified text and page numbers at the bottom |
+| 🏷️ | **Effective Day-Caption Frames** | Every photo page shows a **DAY 1 / DAY 2** caption — by default as **3 photo frames + 1 caption textbox**; when all 4 photos are filled, the caption moves into a bar below the 2×2 grid |
+| 📜 | **Standard Certificate Format** | Auto-generated certificate follows the official 3-paragraph NSS format — student, activities, and programme focus — filled from your data |
 | ✏️ | **In-Preview Edit Mode** | Click **✏ Edit** to edit the document text directly in the preview — like a PDF editor, with auto-update paused while you type |
 | 👤 | **Cover Name Auto-fill** | The cover-page name is auto-filled with your initials + surname (e.g. `T.V.N.S. DHONI`) from Student Details — fully editable |
 | 👥 | **Village Population Field** | Enter the village population (default `500`) and it appears in the community profile findings |
 | 🖼️ | **Smart Photo Frames** | Photos auto-stretch to **fill the frame** completely — the whole image is always visible, whatever the resolution |
 | 🔍 | **Zoom & Pan Photos** | Adjust any evidence photo inside its frame with + / − / reset, or drag it into place |
-| 📐 | **Uniform Image Boxes** | All four photo boxes on a page are identical in size, **including** the caption text box |
+| 📐 | **Uniform Image Boxes** | All four photo boxes on a page are identical in size, **including** the caption bar |
 | 🏷️ | **Figure Numbers Outside Images** | `Fig. 1`, `Fig. 2`… rendered cleanly below each frame |
-| 🖼️ | **Page-Filling Evidence** | Enlarged photo frames (101 mm) and a full-height certificate / annexure image (210 mm) fill the page edge-to-edge |
+| 💾 | **Silent Auto-save (local)** | Every keystroke is saved **on this device only** and restored automatically on the next visit — no profile selector, no user action needed |
+| ⬆️ | **Auto-sync to Repository** | Every time a PDF is saved, the report XML **plus compressed photos** are pushed to `data/<user>/` automatically with the embedded token — only the **latest submission** is kept |
+| 👁️ | **Live Visit & Generate Counters** | Header shows **Views** (one per device) and total **Generated** PDF reports |
+| 📄 | **Smart PDF Filename** | Saving a PDF suggests `<StudentName>_Nss_Report.pdf` automatically |
 | 🌗 | **Light / Dark / Auto themes** | Dark mode keeps the document preview crisp and identical to light mode |
 | 📁 | **"Choose File" → "Reupload File"** | Upload slots show the selected file name (e.g. `1.jpg`) instead of a bulky preview |
 | 🧪 | **Load Demo & Reset** | One click demo data for trying the generator, plus a full reset |
@@ -110,7 +115,9 @@ No build step. No package manager. No internet connection. Just open and start t
 3. **Watch the preview** — the right panel builds the full A4 report live as you type.
 4. **Fine-tune photos** — use the on-frame **+ / − / reset** buttons or drag to pan each photo inside its frame.
 5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.
-6. **Save as PDF** — click **📄 Save As** (or press `Ctrl+P`) and choose *Save as PDF* in the print dialog.
+6. **Save as PDF** — click **📄 Save As** (or press `Ctrl+P`), choose *Save as PDF* in the print dialog — the suggested filename is `<StudentName>_Nss_Report.pdf`.
+7. **Keeps editing later** — everything you type is auto-saved silently **on this device**, so a refresh continues right where you left off.
+8. **Auto-syncs to the repository** — saving the PDF automatically pushes the report XML **and** its photos to `data/<user>/` (embedded token, latest submission wins).
 
 > 💡 The document page is scaled to **fit the preview pane** (`--docscale`) so you always see the *whole* page, while the actual printed output stays true-to-size A4.
 
@@ -139,7 +146,12 @@ NSS-Internship-Report-Generator/
 │   └── styles.css         # All styling: layout, themes, preview & A4 print rules
 │
 ├── ⚙️  js/
-│    └── app.js            # All logic: state, live render, photo adjust, theme, demo, uploads
+│    └── app.js            # All logic: state, live render, photo adjust, theme, demo, uploads, auto-save, GitHub submit
+│
+├── 📁 data/               # Submitted reports (pushed by the Submit feature)
+│    └── <student>/<student>.xml + photos
+│
+├── 📊 stats.json          # Live visit & generated counters
 │
 └── 📘 README.md           # This file
 ```
@@ -166,6 +178,27 @@ Your choice is remembered automatically between visits.
 2. In the **Save As** dialog choose **Save as PDF**.
 3. In the print dialog choose **Save as PDF** as the destination and enable **Background graphics** for the full look.
 4. Save — the generator's UI is automatically hidden from the printout, leaving only the clean A4 report.
+
+---
+
+## 💾 Saving, Submitting & Data
+
+- **Silent auto-save (local)** — every keystroke is stored in this browser under the entered student name and restored automatically on the next visit. No profile selector, no messages — it just works. Photos are re-uploaded each session.
+- **Auto-sync on Save As** — when you save the PDF, the report is automatically pushed to the repository:
+  - `data/<student>/<student>.xml` — the full report data
+  - compressed photo images next to the XML
+  - the repository-wide `stats.json` counters
+  - Only the **latest** submission per student is kept — each new save overwrites the previous one.
+- The GitHub token is **embedded in `js/app.js`** (`GH_TOKEN`) — users never see or enter a token.
+
+---
+
+## 👁️ Visit & Generate Counters
+
+- The header shows two live counters synced to the repository `stats.json`:
+  - **Views** — incremented once per device/browser (a refresh won't double-count)
+  - **Generated** — incremented every time a PDF is saved
+- If the repository isn't reachable the app simply keeps the last known counts — it never blocks editing.
 
 ---
 
