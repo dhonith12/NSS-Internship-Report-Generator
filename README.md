@@ -7,6 +7,7 @@
 **A single-page web app that generates a professional, print-ready A4 internship report — live, offline, and free.**
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-dhonith12%2FNSS--Internship--Report--Generator-0d9488?style=for-the-badge&logo=github)](https://github.com/dhonith12/NSS-Internship-Report-Generator)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-2dd4bf?style=for-the-badge&logo=githubpages&logoColor=white)](https://dhonith12.github.io/NSS-Internship-Report-Generator/)
 [![Made with HTML5](https://img.shields.io/badge/HTML5-✓-e34f26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-✓-1572b6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![Vanilla JS](https://img.shields.io/badge/JavaScript-✓-f7df1e?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
@@ -14,6 +15,8 @@
 [![Offline Ready](https://img.shields.io/badge/Works-100%25%20Offline-2dd4bf?style=for-the-badge)]()
 
 **✦ No server · No installation · No internet required ✦**
+
+> 🌐 **Try it live:** [dhonith12.github.io/NSS-Internship-Report-Generator](https://dhonith12.github.io/NSS-Internship-Report-Generator/)
 
 </div>
 
