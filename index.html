@@ -27,7 +27,7 @@
         title="Switch theme: Light / Dark / System">&#9684; Auto</button>
       <button class="btn btn-outline" onclick="loadDemo()">Load Demo</button>
       <button class="btn btn-outline" onclick="resetForm()">Reset</button>
-      <button class="btn btn-download" onclick="window.print()">&#128196; Download PDF</button>
+      <button class="btn btn-download" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
     </div>
   </header>
 
@@ -48,6 +48,8 @@
           <div class="group-title">&#128203; Cover Page Data</div>
           <div class="field"><label>Theme</label><input id="f_theme"
               value="Community Welfare, Environmental Sustainability and Educational Development"></div>
+          <div class="field"><label>Name on Cover Page</label><input id="f_cover_name"
+              placeholder="Auto-filled from Student Details (initials + name)"></div>
           <div class="grid-3">
             <div class="field"><label>Branch</label><input id="f_branch" value="CSE"></div>
             <div class="field"><label>Section</label><input id="f_section" value="F"></div>
@@ -92,8 +94,12 @@
             <div class="field"><label>State</label><input id="f_state" placeholder="State"></div>
           </div>
           <div class="field"><label>Pincode</label><input id="f_pincode" placeholder="Pincode"></div>
-          <div class="field"><label>Faculty Coordinator</label><input id="f_coordinator"
-              placeholder="Faculty Coordinator"></div>
+          <div class="grid-2">
+            <div class="field"><label>Village Population <span class="req">*</span></label><input id="f_population"
+                type="number" value="500" min="1"></div>
+            <div class="field"><label>Faculty Coordinator</label><input id="f_coordinator"
+                placeholder="Faculty Coordinator"></div>
+          </div>
         </div>
 
         <div class="group">
@@ -138,7 +144,7 @@
         </div>
 
         <div class="actions-bar no-print">
-          <button class="btn btn-download" style="flex:1" onclick="window.print()">&#128196; Download PDF</button>
+          <button class="btn btn-download" style="flex:1" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
         </div>
 
       </div>
@@ -147,7 +153,11 @@
     <main class="preview-panel">
       <div class="preview-toolbar no-print">
         <h2><span class="dot"></span> Live Preview</h2>
-        <div class="meta" id="previewMeta"></div>
+        <div class="toolbar-right">
+          <button class="btn btn-outline" id="editBtn" onclick="toggleEdit()"
+            title="Edit the document text directly in the preview">&#9998; Edit</button>
+          <div class="meta" id="previewMeta"></div>
+        </div>
       </div>
       <div class="doc-stage" id="docStage"></div>
     </main>
@@ -178,6 +188,24 @@
       </div>
     </div>
   </footer>
+
+  <!-- Save As (Ctrl+P) dialog -->
+  <div class="save-modal no-print" id="saveModal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle" hidden>
+    <div class="save-modal-backdrop" onclick="closeSaveDialog()"></div>
+    <div class="save-modal-card">
+      <button class="save-modal-close" onclick="closeSaveDialog()" title="Close (Esc)" aria-label="Close">&#10005;</button>
+      <h3 id="saveModalTitle">Save Report As</h3>
+      <p class="save-modal-sub">Press <kbd>Ctrl</kbd> + <kbd>P</kbd> anytime to save your report.</p>
+      <div class="save-modal-options">
+        <button class="save-opt" onclick="saveAsPdf()">
+          <span class="save-opt-icon">&#128196;</span>
+          <span class="save-opt-label">Save as PDF</span>
+          <span class="save-opt-desc">Generates a print-ready PDF via your browser.</span>
+        </button>
+      </div>
+      <p class="save-modal-hint">Tip: Use <kbd>Esc</kbd> to close this dialog.</p>
+    </div>
+  </div>
 
     <script src="js/app.js"></script>
 </body>

@@ -656,6 +656,38 @@
       color: var(--toolbar-sub)
     }
 
+    .preview-toolbar .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .btn-edit-on {
+      background: var(--primary) !important;
+      color: #fff !important;
+      border-color: var(--primary) !important;
+      box-shadow: 0 4px 14px rgba(13, 148, 136, .35)
+    }
+
+    .doc-stage.editing .doc-page {
+      outline: 2px solid rgba(13, 148, 136, .45);
+      outline-offset: 3px
+    }
+
+    .doc-stage.editing .doc-page [contenteditable="true"] {
+      cursor: text
+    }
+
+    .doc-stage.editing .doc-page [contenteditable="true"]:hover {
+      box-shadow: inset 0 0 0 1px rgba(13, 148, 136, .35)
+    }
+
+    .doc-stage.editing .doc-page [contenteditable="true"]:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(13, 148, 136, .6)
+    }
+
     .doc-stage {
       background: var(--stage-bg);
       border-radius: var(--radius);
@@ -712,27 +744,29 @@
     }
 
     .doc-page .pagehead {
+      position: absolute;
+      top: 0.8%;
+      left: 0;
+      right: 0;
       text-align: center;
-      padding: 5mm 0 4mm;
-      border-bottom: 2px solid #111;
-      margin: 0
+      z-index: 1
     }
 
     .doc-page .pagehead .college-head {
+      width: 100%;
       border: none;
-      padding: 0;
+      border-bottom: 2px solid #111;
+      padding: 1mm 0 1.5mm;
       margin: 0
     }
 
     .doc-page .content {
-      padding: 9mm 25.4mm 22mm 38.1mm;
+      padding: 25.4mm 25.4mm 25.4mm 31.75mm;
       position: relative
     }
 
     .doc-page .college-head {
-      width: calc(100% + 38.1mm + 25.4mm);
-      margin-left: -38.1mm;
-      margin-right: -25.4mm;
+      width: 100%;
       border-collapse: collapse;
       text-align: center;
       border-bottom: 2px solid #111;
@@ -790,7 +824,7 @@
 
     .doc-page h1.center {
       text-align: center;
-      font-size: 18pt;
+      font-size: 16pt;
       letter-spacing: 3pt;
       margin: 2mm 0 14mm
     }
@@ -822,7 +856,7 @@
     .doc-page .content.cert {
       display: flex;
       flex-direction: column;
-      min-height: 266mm
+      min-height: 291mm
     }
 
     .doc-page .content.cert .sign {
@@ -830,10 +864,11 @@
     }
 
     .doc-page p {
-      margin-bottom: 4mm;
+      margin-bottom: 2mm;
       font-size: 12pt;
       text-align: justify;
-      font-family: 'Times New Roman', serif
+      font-family: 'Times New Roman', serif;
+      line-height: 1.5
     }
 
     .doc-page .indent {
@@ -873,7 +908,8 @@
     .doc-page table.act-meta td {
       border: 1px solid #999;
       padding: 1.5mm 3mm;
-      vertical-align: top
+      vertical-align: top;
+      line-height: 1.5
     }
 
     .doc-page table.act-meta td.lbl {
@@ -886,26 +922,27 @@
       font-size: 16pt;
       font-weight: 700;
       text-align: center;
-      margin: 7mm 0 4mm;
+      margin: 4mm 0 3mm;
       letter-spacing: 1pt
     }
 
     .doc-page .sub-h {
-      font-size: 13pt;
+      font-size: 14pt;
       font-weight: 700;
-      margin: 4mm 0 2mm
+      margin: 3mm 0 1.5mm
     }
 
     .doc-page ul.obj {
-      margin: 2mm 0
+      margin: 1.5mm 0
     }
 
     .doc-page ul.obj li {
       margin-left: 8mm;
-      margin-bottom: 1.5mm;
+      margin-bottom: 0.5mm;
       font-size: 12pt;
       font-family: 'Times New Roman', serif;
-      text-align: justify
+      text-align: justify;
+      line-height: 1.5
     }
 
     .doc-page table.toc {
@@ -918,9 +955,10 @@
     .doc-page table.toc th,
     .doc-page table.toc td {
       border: 1px solid #999;
-      padding: 2mm 4mm;
+      padding: 4mm 4mm;
       text-align: left;
-      font-family: 'Times New Roman', serif
+      font-family: 'Times New Roman', serif;
+      line-height: 1.5
     }
 
     .doc-page table.toc th {
@@ -938,6 +976,11 @@
     .doc-page table.toc td:first-child,
     .doc-page table.toc td:last-child {
       text-align: center
+    }
+
+    .doc-page .toc-wrap {
+      padding-top: 0.6%;
+      padding-bottom: 0.6%
     }
 
     .doc-page .toc-wrap .section-h {
@@ -968,7 +1011,7 @@
 
     .doc-page .pframe {
       border: 1px solid #999;
-      height: 96mm;
+      height: 101mm;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1052,22 +1095,22 @@
       font-size: 10.5pt;
       font-family: 'Times New Roman', serif;
       font-weight: bold;
-      margin-top: 1.5mm;
-      padding-top: 1.5mm;
-      border-top: 1px solid #999;
-      line-height: 1.2;
+      margin-top: 1mm;
+      line-height: 9mm;
       height: 9mm;
-      box-sizing: border-box
+      box-sizing: border-box;
+      overflow: hidden
     }
 
     .doc-page .pcap {
       border: 1px solid #999;
-      height: 106.5mm;
+      height: 101mm;
       padding: 3mm;
       font-size: 12pt;
       font-family: 'Times New Roman', serif;
       text-align: justify;
-      overflow: hidden
+      overflow: hidden;
+      box-sizing: border-box
     }
 
     .doc-page .mapimg {
@@ -1109,8 +1152,18 @@
     .doc-page .certimg {
       width: 100%;
       max-width: 100%;
+      height: 210mm;
+      object-fit: contain;
       display: block;
       margin: 4mm auto 0
+    }
+
+    .doc-page .cert-ph {
+      height: 210mm;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center
     }
 
     .doc-page .img-placeholder {
@@ -1123,6 +1176,149 @@
       font-size: 11pt;
       font-family: 'Times New Roman', serif;
       background: var(--slot-bg, #fafafa)
+    }
+
+    .save-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px
+    }
+
+    .save-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, .55);
+      backdrop-filter: blur(3px)
+    }
+
+    .save-modal-card {
+      position: relative;
+      width: min(92vw, 440px);
+      background: var(--panel-bg);
+      color: var(--text);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(2, 6, 23, .5);
+      padding: 26px 24px 20px;
+      text-align: center
+    }
+
+    .save-modal[hidden] {
+      display: none
+    }
+
+    .save-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      border: none;
+      background: var(--btn-ghost-bg);
+      color: var(--btn-ghost-text);
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: background .15s
+    }
+
+    .save-modal-close:hover {
+      background: var(--btn-ghost-hover)
+    }
+
+    .save-modal-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .save-modal-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px
+    }
+
+    kbd {
+      background: var(--btn-ghost-bg);
+      color: var(--btn-ghost-text);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 600
+    }
+
+    .save-modal-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px
+    }
+
+    .save-opt {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color .15s, box-shadow .15s, transform .15s
+    }
+
+    .save-opt:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 16px rgba(13, 148, 136, .25);
+      transform: translateY(-1px)
+    }
+
+    .save-opt:active {
+      transform: scale(.98)
+    }
+
+    .save-opt-icon {
+      width: 42px;
+      height: 42px;
+      flex: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2dd4bf, #0d9488);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px
+    }
+
+    .save-opt-label {
+      display: block;
+      font-size: 15px;
+      font-weight: 700
+    }
+
+    .save-opt-desc {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height: 1.4
+    }
+
+    .save-modal-hint {
+      font-size: 11.5px;
+      color: var(--muted)
     }
 
     @media(max-width:1280px) {
@@ -1171,7 +1367,7 @@
       }
 
       .doc-page .content {
-        padding: 7mm
+        padding: 30mm 7mm 7mm
       }
 
       .doc-page .college-head img {

@@ -22,6 +22,7 @@
 ## 📖 Table of Contents
 
 - [✨ Features](#-features)
+- [📄 Document Formatting](#-document-formatting)
 - [🚀 Getting Started](#-getting-started)
 - [🛠️ How It Works](#️-how-it-works)
 - [🧰 Tech Stack](#-tech-stack)
@@ -38,16 +39,35 @@
 | | Feature | Why it matters |
 |---|---|---|
 | ⚡ | **Real-time Live Preview** | Every keystroke instantly rebuilds the A4 document on the right panel — no render button needed |
-| 📄 | **Complete Report Structure** | Cover page, student details, community profile, village map, activity pages, photo evidence, certificates & annexures |
+| 📄 | **Complete Report Structure** | Cover, certificate, acknowledgement, table of contents, introduction, objectives, community profile, village map, occupations, internship activities, photo evidence, learning outcomes, challenges, social impact, conclusion & annexures |
+| 📐 | **College-Format A4 Layout** | Every section fits on a **single A4 page** — Times New Roman 12pt body, 16pt bold main headings, 14pt bold subheadings, 1.5 line spacing, justified text and page numbers at the bottom |
+| ✏️ | **In-Preview Edit Mode** | Click **✏ Edit** to edit the document text directly in the preview — like a PDF editor, with auto-update paused while you type |
+| 👤 | **Cover Name Auto-fill** | The cover-page name is auto-filled with your initials + surname (e.g. `T.V.N.S. DHONI`) from Student Details — fully editable |
+| 👥 | **Village Population Field** | Enter the village population (default `500`) and it appears in the community profile findings |
 | 🖼️ | **Smart Photo Frames** | Photos auto-stretch to **fill the frame** completely — the whole image is always visible, whatever the resolution |
 | 🔍 | **Zoom & Pan Photos** | Adjust any evidence photo inside its frame with + / − / reset, or drag it into place |
 | 📐 | **Uniform Image Boxes** | All four photo boxes on a page are identical in size, **including** the caption text box |
 | 🏷️ | **Figure Numbers Outside Images** | `Fig. 1`, `Fig. 2`… rendered cleanly below each frame |
+| 🖼️ | **Page-Filling Evidence** | Enlarged photo frames (101 mm) and a full-height certificate / annexure image (210 mm) fill the page edge-to-edge |
 | 🌗 | **Light / Dark / Auto themes** | Dark mode keeps the document preview crisp and identical to light mode |
 | 📁 | **"Choose File" → "Reupload File"** | Upload slots show the selected file name (e.g. `1.jpg`) instead of a bulky preview |
 | 🧪 | **Load Demo & Reset** | One click demo data for trying the generator, plus a full reset |
-| 👋 | **Welcome Toast** | Friendly 2-second greeting on entry, reminding you that Desktop Mode is the best experience |
-| 🖨️ | **Print → Save as PDF** | Print-ready `@page A4` styles; just use the browser's *Save as PDF* |
+| 👋 | **Smart Welcome Toast** | A friendly 2-second greeting on mobile / tablet views; skipped automatically on desktop |
+| 🖨️ | **Save As → Print to PDF** | A clean **Save As** dialog (or `Ctrl+P`) with print-ready `@page A4` styles |
+
+---
+
+## 📄 Document Formatting
+
+The generated report follows a standard college report format out of the box:
+
+- **Page size** — A4 (`@page A4`)
+- **Font** — Times New Roman, 12 pt body
+- **Headings** — 16 pt bold main headings, 14 pt bold subheadings
+- **Spacing** — 1.5 line spacing, justified paragraphs
+- **Margins** — 1" top / bottom / right, 1.25" left
+- **Page numbers** — centred at the bottom of every page
+- **One page per section** — each report section is sized to fill exactly one A4 page
 
 ---
 
@@ -86,7 +106,8 @@ No build step. No package manager. No internet connection. Just open and start t
 2. **Upload your images** — cover photo, village map, activity evidence (up to 4 photos per day × 2 days), and the certificate. The button switches to **Reupload File** and shows the filename.
 3. **Watch the preview** — the right panel builds the full A4 report live as you type.
 4. **Fine-tune photos** — use the on-frame **+ / − / reset** buttons or drag to pan each photo inside its frame.
-5. **Download as PDF** — hit **Download PDF** and choose *Save as PDF* in the print dialog.
+5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.
+6. **Save as PDF** — click **📄 Save As** (or press `Ctrl+P`) and choose *Save as PDF* in the print dialog.
 
 > 💡 The document page is scaled to **fit the preview pane** (`--docscale`) so you always see the *whole* page, while the actual printed output stays true-to-size A4.
 
@@ -138,9 +159,9 @@ Your choice is remembered automatically between visits.
 
 ## 🖨️ Exporting the PDF
 
-1. Click **📄 Download PDF** (or press `Ctrl + P`).
-2. In the print dialog choose **Save as PDF** as the destination.
-3. Make sure **Background graphics** are enabled for the full look.
+1. Click **📄 Save As** (or press `Ctrl + P`).
+2. In the **Save As** dialog choose **Save as PDF**.
+3. In the print dialog choose **Save as PDF** as the destination and enable **Background graphics** for the full look.
 4. Save — the generator's UI is automatically hidden from the printout, leaving only the clean A4 report.
 
 ---

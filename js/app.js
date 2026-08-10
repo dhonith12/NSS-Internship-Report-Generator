@@ -143,6 +143,14 @@
     var $ = function (id) { return document.getElementById(id); };
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); }
     function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function initialsName(name) {
+      var s = String(name == null ? '' : name).trim();
+      if (!s) return '';
+      var parts = s.split(/\s+/);
+      if (parts.length < 2) return s.toUpperCase();
+      var last = parts[parts.length - 1].toUpperCase();
+      return parts.slice(0, -1).map(function (p) { return p.charAt(0).toUpperCase(); }).join('.') + '.' + last;
+    }
     function fmtDate(d, opts) {
       opts = opts || {};
       if (!d) return '';
@@ -184,7 +192,9 @@
         period: fmtPeriod(), village: rawVal('f_village'), mandal: rawVal('f_mandal'), district: rawVal('f_district'),
         state: rawVal('f_state'), pincode: rawVal('f_pincode'), coordinator: rawVal('f_coordinator'), acts: acts,
         theme: rawVal('f_theme'), branch: rawVal('f_branch'), section: rawVal('f_section'), sem: rawVal('f_sem'),
-        po: rawVal('f_po'), dept: rawVal('f_dept'), annex: rawVal('f_annex')
+        po: rawVal('f_po'), dept: rawVal('f_dept'), annex: rawVal('f_annex'),
+        coverName: rawVal('f_cover_name') || initialsName(rawVal('f_name')),
+        population: rawVal('f_population') || '500'
       };
     }
 
@@ -201,7 +211,7 @@
         + '</tr></table>';
     }
     function pageShell(body, pageno, cls) {
-      return '<div class="doc-page"><div class="content' + (cls ? ' ' + cls : '') + '">' + collegeHead() + body
+      return '<div class="doc-page"><div class="pagehead">' + collegeHead() + '</div><div class="content' + (cls ? ' ' + cls : '') + '">' + body
         + '</div><div class="pageno">' + pageno + '</div></div>';
     }
     function tocTable(d) {
@@ -224,7 +234,7 @@
     }
     function coverPage(d) {
       var items = [
-        { v: d.name, left: '38.4%', top: '61.3%', width: '21.3%', fs: '16pt', align: 'center', lh: '24pt' },
+        { v: d.coverName, left: '38.4%', top: '61.3%', width: '21.3%', fs: '16pt', align: 'center', lh: '24pt' },
         { v: d.regno, left: '34.9%', top: '63.7%', width: '26.5%', fs: '16pt', align: 'center', lh: '25.6pt' },
         { v: d.branch, left: '34.7%', top: '66.0%', width: '26.5%', fs: '16pt', align: 'center', lh: '24pt' },
         { v: d.section, left: '38.0%', top: '68.5%', width: '20.6%', fs: '16pt', align: 'center', lh: '25pt' },
@@ -256,21 +266,19 @@
         + '<td class="lbl">Ending Date</td><td>' + esc(a.end || '[DD/MM/YYYY]') + '</td></tr>'
         + '<tr><td class="lbl">Total Hours</td><td colspan="3">' + esc(a.hours || '[XX Hours]') + '</td></tr></table>';
       b += '<div class="sub-h">Objective</div>';
-      b += '<p>The objective of this activity was ' + esc(a.theme || 'to serve the community') + '. This activity helped me understand the importance of ' + esc(a.theme || 'community service') + ', social responsibility, and community participation.</p>';
+      b += '<p>The objective of this activity was ' + esc(a.theme || 'to serve the community') + ', promoting ' + esc(a.theme || 'community service') + ', social responsibility, and community participation. It was aimed at creating meaningful awareness and contributing to the welfare of the village community.</p>';
       b += '<div class="sub-h">Description of Activity:</div>';
-      b += '<p>As part of the Social Internship under the National Service Scheme (NSS), I actively participated in ' + esc(a.name || 'this activity') + ' in ' + esc(a.location || 'the community') + '. The activity was carried out under the guidance of the NSS Programme Officer and faculty members, with the support of fellow NSS volunteers and community members.</p>';
+      b += '<p>As part of the Social Internship under the National Service Scheme (NSS), I actively participated in ' + esc(a.name || 'this activity') + ' in ' + esc(a.location || 'the community') + '. The activity was carried out under the guidance of the NSS Programme Officer and faculty members, with the active support of fellow volunteers and local community members. I interacted with the villagers, explained the purpose of the activity, and encouraged their participation.</p>';
       b += '<div class="sub-h">Methodology:</div><ul class="obj">';
       b += '<li>Planned and organized the activity in coordination with fellow NSS volunteers.</li>';
-      b += '<li>Carried out the activity with the active participation of the local community.</li>';
-      b += '<li>Completed the activity under the guidance of the NSS Programme Officer and faculty members.</li>';
+      b += '<li>Executed the activity with the active participation of the local community.</li>';
       b += '<li>Documented the observations, interactions, and outcomes of the activity.</li></ul>';
       b += '<div class="sub-h">Outcomes:</div>';
-      b += '<p>The activity created awareness among the community members and strengthened the spirit of social responsibility, teamwork, and community service.</p>';
+      b += '<p>The activity created awareness among the community members, strengthened the spirit of social responsibility and teamwork, and encouraged the villagers to adopt the good practices promoted during the session. The positive response of the people made the activity successful and rewarding.</p>';
       b += '<div class="sub-h">Skills Developed:</div><ul class="obj">';
       b += '<li>Improved communication and interpersonal skills.</li>';
       b += '<li>Strengthened teamwork, leadership, and coordination.</li>';
-      b += '<li>Enhanced problem-solving and organizational abilities.</li>';
-      b += '<li>Deepened understanding of community needs and social responsibility.</li></ul>';
+      b += '<li>Enhanced problem-solving and organizational abilities.</li></ul>';
       function photoPage(di, cap, pn) {
         var slots = (a.days[di] && a.days[di].img) || [];
         var imgs = slots.filter(function (x) { return x && x.src; });
@@ -338,40 +346,43 @@
         + '<p>This is to certify that Mr. <b>' + val('f_name') + '</b>, a student of ' + val('f_class') + ', CSE, bearing Registration Number <b>' + val('f_regno') + '</b>, has successfully completed the NSS Social Internship Programme by carrying out community service activities for <b>' + val('f_hours') + ' hours</b> during the period <b>' + esc(d.period) + '</b>, under the guidance of the NSS Programme Officer.</p>'
         + '<p>During the internship, I actively participated in various community service activities at ' + esc(d.village) + ', ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ' \u2013 ' + esc(d.pincode) + '. The activities carried out were ' + esc(actList) + '.</p>'
         + '<p>The internship primarily focused on ' + esc(actFocus) + '. These activities were completed with sincerity, dedication, and active participation under the National Service Scheme (NSS), fostering environmental responsibility, educational development, and community awareness while strengthening community engagement and social responsibility.</p>'
+        + '<p>As a participant, I gained practical exposure to rural life and community development, and developed valuable skills in teamwork, communication, leadership, and social responsibility. The experience inspired me to continue contributing to the welfare of society and to serve the community with sincerity and dedication in the future.</p>'
+        + '<p>Throughout the internship, I maintained discipline, punctuality, and a spirit of teamwork. I carried out all the assigned duties sincerely and cooperated with the NSS Programme Officer, faculty members, and fellow volunteers to ensure the successful completion of the programme.</p>'
         + '<table class="sign"><tr><td>NSS Programme Officer</td><td style="text-align:right">Professors HOD, CSE.</td></tr></table>', 'i', 'cert');
 
       /* ACKNOWLEDGEMENT */
       html += pageShell('<div class="section-h">ACKNOWLEDGEMENT</div>'
-        + '<p>I would like to express my sincere gratitude to the management of R.V.R. &amp; J.C. College of Engineering (Autonomous) for providing me with the opportunity to participate in the NSS Social Internship Programme. Their vision and commitment to holistic education have enabled students to gain valuable exposure to social service and community development activities.</p>'
-        + '<p>I extend my heartfelt thanks to the Dr. Kolla Srinivas, Principal of R.V.R. &amp; J.C. College of Engineering for the constant encouragement and support provided throughout the programme. The guidance and motivation offered by the college administration played a significant role in the successful completion of this internship.</p>'
-        + '<p>I am deeply grateful to the Prof. Nallamothu Nagamalleswara Rao, Head of the Department for the encouragement, valuable suggestions, and continuous support extended during the internship period. Their guidance helped me understand the importance of social responsibility and community engagement.</p>'
-        + '<p>I would also like to express my sincere appreciation to the Dr. S J R K PADMINIVALLI V, NSS Programme Officer for effectively organizing and coordinating the Social Internship Programme. Their dedication, leadership, and continuous efforts ensured a meaningful and enriching learning experience for all the participants.</p>'
-        + '<p>My special thanks go to the ' + val('f_coordinator') + ', Faculty Coordinator for their constant guidance, encouragement, and support throughout the internship. Their valuable advice, motivation, and timely assistance helped me complete the programme successfully.</p>'
-        + '<p>I would also like to express my sincere gratitude to the local community members of ' + esc(d.village) + ' Village for their cooperation and support throughout the internship. Their support helped us carry out various community service and social awareness activities. I also thank my fellow NSS volunteers for their teamwork and support during the programme.</p>'
-        + '<p>Finally, I would like to thank everyone who contributed directly or indirectly to the successful completion of this NSS Social Internship Programme. This internship has been a valuable learning experience that enhanced my understanding of social responsibility, environmental conservation, teamwork, leadership, community service, and digital empowerment. I will always cherish the knowledge and experience gained through this programme and strive to apply these values in my future endeavors.</p>', 'ii');
+        + '<p>I would like to express my sincere and heartfelt gratitude to the management of R.V.R. &amp; J.C. College of Engineering (Autonomous) for providing me with the valuable opportunity to participate in the NSS Social Internship Programme. Their vision and commitment to holistic education, combined with the encouragement to take up community service, gave me a meaningful and enriching exposure to social service, rural life, and community development.</p>'
+        + '<p>I extend my heartfelt thanks to Dr. Kolla Srinivas, Principal, for the constant encouragement and support provided throughout the programme, and to Prof. Nallamothu Nagamalleswara Rao, Head of the Department, for the valuable suggestions, guidance, and continuous support extended during the entire internship period.</p>'
+        + '<p>I sincerely appreciate Dr. S J R K Padminivalli V, NSS Programme Officer, for effectively organizing and coordinating the Social Internship Programme. Their dedication, leadership, and continuous efforts ensured that every activity was carried out smoothly and that we gained a meaningful and enriching learning experience.</p>'
+        + '<p>My special thanks go to ' + val('f_coordinator') + ', Faculty Coordinator, for their constant guidance, encouragement, and timely assistance throughout the internship. Their valuable advice and motivation helped me plan, organize, and complete the various activities successfully.</p>'
+        + '<p>I also thank the local community members of ' + esc(d.village) + ' Village for their warm cooperation and support. Their willingness to take part in the awareness campaigns and other activities made this internship a truly memorable experience. I also thank my fellow NSS volunteers, whose teamwork, coordination, and enthusiasm helped us complete every activity successfully.</p>'
+        + '<p>I am grateful to all the teaching and non-teaching staff of the department who encouraged me and offered their support whenever needed during the course of the internship.</p>'
+        + '<p>I would also like to acknowledge the constant support of my classmates and friends, whose encouragement helped me stay motivated throughout the internship. This internship has been a truly memorable journey that helped me grow as a responsible and socially aware citizen.</p>'
+        + '<p>Finally, I thank everyone who contributed directly or indirectly to the successful completion of this NSS Social Internship Programme. It has been a valuable learning experience that strengthened my understanding of social responsibility, teamwork, community service, and the true meaning of serving society with dedication and sincerity.</p>', 'ii');
 
       /* TABLE OF CONTENTS */
       html += pageShell(tocTable(d), 'iii');
 
       /* INTRODUCTION (single page) */
       html += pageShell('<div class="section-h">INTRODUCTION</div>'
-        + '<p><b>National Service Scheme (NSS)</b> is a Government of India initiative launched on 24 September 1969 under the Ministry of Youth Affairs and Sports. It encourages students to participate in voluntary community service and contribute to the welfare of society. The motto of NSS is "Not Me But You," which emphasizes selfless service, social responsibility, and community involvement.</p>'
-        + '<p>The NSS emblem is based on the giant Rath Wheel of the Sun Temple at Konark, Odisha. The wheel stands for continuous progress and reminds every volunteer that development is a never-ending process of creation, preservation, and release. The motto "Not Me But You" expresses the essence of democratic living and selfless service, urging volunteers to place the needs of the community before their own.</p>'
-        + '<p><b>Objectives of NSS</b></p><ul class="obj"><li>Develop social responsibility among students.</li><li>Promote leadership and teamwork.</li><li>Encourage community participation.</li><li>Improve communication and organizational skills.</li><li>Build responsible and disciplined citizens.</li><li>Contribute to national development.</li></ul>'
-        + '<p>The philosophy of the National Service Scheme is that the development of the individual and the development of the community are interdependent. By taking part in constructive social service, students not only contribute to society but also develop their character, leadership qualities, and understanding of real-life problems.</p>'
-        + '<p><b>Social Internship</b> is a community-based learning programme. It provides students with an opportunity to work directly with society, understand real-life social issues, and combine classroom learning with practical community experience. It bridges the gap between theoretical knowledge and the needs of society.</p>'
-        + '<p><b>About the Programme</b></p><p>The NSS Social Internship was conducted over a period of ' + esc(d.period) + ' under the guidance of faculty members and local coordinators. Each day was planned with specific community service activities, including awareness campaigns, cleanliness drives, plantation programmes, digital literacy sessions, and interactions with local residents and officials, contributing to environmental conservation, public hygiene, educational development, and public welfare.</p>'
-        + '<p>As an NSS volunteer, I understood that every activity, however small, contributes to the larger development of society. The internship helped me realise that meaningful change comes from consistent effort, cooperation, and a genuine concern for the well-being of others, and it strengthened my commitment to serve the community throughout my life.</p>', '1');
+        + '<p><b>National Service Scheme (NSS)</b> is a Government of India initiative launched on 24 September 1969 under the Ministry of Youth Affairs and Sports. It encourages students to participate in voluntary community service for the welfare of society, guided by the motto <b>"Not Me But You"</b>, which emphasizes selfless service, social responsibility, and the spirit of working for the benefit of others.</p>'
+        + '<p>The NSS emblem is based on the giant Rath Wheel of the Sun Temple at Konark, Odisha. The wheel stands for continuous progress, reminding every volunteer that development is a never-ending process of creation, preservation, and release. It inspires us to keep working steadily for the improvement of the community around us.</p>'
+        + '<p><b>Objectives of NSS</b></p><ul class="obj"><li>Develop social responsibility among students.</li><li>Promote leadership and teamwork.</li><li>Encourage community participation.</li><li>Improve communication and organizational skills.</li><li>Contribute to national development.</li></ul>'
+        + '<p>The philosophy of the NSS is that individual and community development are interdependent, and constructive social service builds both the community and the student\'s character and leadership. By working for others, volunteers learn discipline, empathy, and the value of collective effort.</p>'
+        + '<p><b>Social Internship</b> is a community-based learning programme that provides students an opportunity to work directly with society, understand real-life social issues, and combine classroom learning with practical community experience, thereby bridging the gap between theoretical knowledge and the needs of society.</p>'
+        + '<p><b>About the Programme</b></p><p>The NSS Social Internship was conducted over a period of ' + esc(d.period) + ' under the guidance of faculty members and local coordinators. Each day was planned with specific community service activities, including awareness campaigns, cleanliness drives, plantation programmes, digital literacy sessions, and interactions with local residents and officials.</p>'
+        + '<p>As an NSS volunteer, I realised that every activity, however small, contributes to the development of society, and that meaningful change comes from consistent effort and a genuine concern for the well-being of others. This internship strengthened my commitment to serve the community throughout my life.</p>', '1');
 
       /* OBJECTIVES */
       html += pageShell('<div class="section-h">OBJECTIVES OF THE SOCIAL INTERNSHIP</div>'
-        + '<p>The Social Internship under the National Service Scheme (NSS) is designed to provide engineering students with practical exposure to community life and social issues. It aims to develop socially responsible individuals who can apply their technical knowledge and skills for the society.</p>'
+        + '<p>The Social Internship under the National Service Scheme (NSS) provides engineering students with practical exposure to community life and social issues, developing socially responsible individuals who can apply their technical knowledge for the benefit of society.</p>'
         + '<ul class="obj"><li><b>\u2192 To understand community problems:</b> Identify and study the social, economic, environmental, and educational challenges faced by local communities.</li>'
         + '<li><b>\u2192 To develop social responsibility:</b> Encourage students to become responsible citizens who actively contribute to the welfare and development of society.</li>'
         + '<li><b>\u2192 To apply technical knowledge for social benefit:</b> Utilize engineering knowledge and innovative ideas to address real-life community problems.</li>'
         + '<li><b>\u2192 To improve communication and teamwork skills:</b> Strengthen interpersonal skills by working with community members, fellow students, faculty, and local authorities.</li>'
         + '<li><b>\u2192 To promote awareness on health, environment, and digital literacy:</b> Conduct awareness campaigns on personal hygiene, sanitation, environmental protection, and responsible use of technology.</li>'
-        + '<li><b>\u2192 To encourage community participation:</b> Motivate local people to take part in development activities and work together for the good improvement of their community.</li></ul>'
+        + '<li><b>\u2192 To encourage community participation:</b> Motivate local people to take part in development activities and work together for the betterment of their community.</li></ul>'
         + '<p><b>\u2756 Objectives of the Student Volunteer</b></p><ul class="obj">'
         + '<li>To gain first-hand exposure to rural society, culture, and community life.</li>'
         + '<li>To develop the ability to plan, organise, and execute community service activities.</li>'
@@ -379,30 +390,30 @@
         + '<li>To build confidence, self-reliance, and decision-making skills through real-world problem solving.</li>'
         + '<li>To strengthen the habit of working in a team and sharing responsibilities.</li></ul>'
         + '<p><b>\u2756 Expected Outcomes of the Objectives</b></p>'
-        + '<p>By the end of the internship, I was able to connect theoretical knowledge with practical community needs, develop a lifelong commitment to social service, and become a more responsible, aware, and disciplined citizen. The objectives guided every activity I undertook and helped me stay focused on serving the community sincerely.</p>'
-        + '<p>The objectives also emphasise the holistic development of students. Apart from service, the programme aims to develop qualities such as leadership, punctuality, dedication, and the ability to work under different conditions, which are essential for professional and personal growth.</p>', '2');
+        + '<p>By the end of the internship, I was able to connect theoretical knowledge with practical community needs and develop a lifelong commitment to social service. The objectives guided every activity I undertook and helped me stay focused on serving the community sincerely.</p>'
+        + '<p>The programme also builds holistic qualities such as leadership, punctuality, dedication, and the ability to work under different conditions, which are essential for professional and personal growth.</p>', '2');
 
       /* COMMUNITY PROFILE + GEOGRAPHICAL IMAGES (single page, one map image) */
       html += pageShell('<div class="section-h">ORGANIZATION / COMMUNITY PROFILE</div>'
-        + '<p>As part of my Social Internship under the National Service Scheme (NSS), I carried out my internship at ' + esc(d.village) + ' Village, located in ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ' \u2013 ' + esc(d.pincode) + '. The internship provided me with valuable opportunities to understand rural development, environmental conservation, digital literacy, and community service.</p>'
-        + '<p><b>\u2756 Geographical Profile</b></p><p>' + esc(d.village) + ' is located in ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + '. The village is situated a few kilometers from the district headquarters and is well connected by local roads. It is surrounded by agricultural fields and has a peaceful rural environment with a warm tropical climate.</p>'
+        + '<p>As part of my Social Internship under the National Service Scheme (NSS), I carried out my internship at ' + esc(d.village) + ' Village, located in ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ' \u2013 ' + esc(d.pincode) + '. The internship gave me valuable opportunities to understand rural development, environmental conservation, digital literacy, and community service through direct interaction with the villagers, and provided a perfect rural setting to observe the everyday life and culture of the local people.</p>'
+        + '<p><b>\u2756 Geographical Profile</b></p><p>' + esc(d.village) + ' is located in ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + '. The village is situated a few kilometers from the district headquarters and is well connected by local roads, surrounded by agricultural fields and a peaceful rural environment with a warm and pleasant climate throughout most of the year.</p>'
         + '<p><b>\u2756 About the Community</b></p>' + profileBody(d)
-        + '<p><b>\u2756 During my study of the village, I found that:</b></p><ul class="obj"><li>The total population of ' + esc(d.village) + ' is approximately __ people.</li><li>Agriculture is the primary occupation of most villagers.</li><li>The village has basic facilities such as schools, roads, electricity, and public transportation.</li><li>The people are cooperative and actively participate in community development activities.</li></ul>'
+        + '<p><b>\u2756 During my study of the village, I found that:</b></p><ul class="obj"><li>The total population of ' + esc(d.village) + ' is approximately ' + esc(d.population) + ' people.</li><li>Agriculture is the primary occupation of most villagers.</li><li>The village has basic facilities such as schools, roads, electricity, and public transportation.</li><li>The people are cooperative and actively participate in community development activities.</li></ul>'
         + '<div class="section-h">GEOGRAPHICAL IMAGES OF VILLAGE</div>'
         + geoMap(d)
-        + '<p class="map-desc">The map above shows the geographical location of ' + esc(d.village) + ' Village, ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ', along with the approach roads and important landmarks near the village.</p>', '3');
+        + '<p class="map-desc">The map above shows the geographical location of ' + esc(d.village) + ' Village, ' + esc(d.mandal) + ', ' + esc(d.district) + ', ' + esc(d.state) + ', along with the approach roads, nearby towns, and the important landmarks and facilities around the village.</p>', '3');
 
       /* MAJOR OCCUPATIONS / SOCIAL ISSUES */
       html += pageShell('<div class="section-h">MAJOR OCCUPATIONS / SOCIAL ISSUES</div>'
         + '<p><b>\u2756 Major Occupations</b></p><p>From my observations and online information about ' + esc(d.village) + ', I found that the major occupations of the villagers include the following:</p>'
         + '<ul class="obj">' + occupationList(d) + '</ul>'
-        + '<p>Agriculture forms the backbone of the village economy. A large section of the population depends directly or indirectly on farming, while many others work as agricultural labourers or run small-scale businesses to support their families.</p>'
+        + '<p>Agriculture forms the backbone of the village economy. A large section of the population depends directly or indirectly on farming, while many others work as agricultural labourers or run small-scale businesses. In addition to farming, some villagers are engaged in dairy farming, petty trading, and daily-wage labour, while educated youth seek employment in nearby towns and cities.</p>'
         + '<p><b>\u2756 Social Issues</b></p><p>During my study of the village, I observed certain social issues that affect the daily life of the community members:</p>'
         + '<ul class="obj">' + socialIssuesList(d) + '</ul>'
         + '<p><b>\u2756 Key Observations</b></p>'
         + '<p>The people of ' + esc(d.village) + ' are hardworking and hospitable, yet many families face difficulties due to limited awareness, inadequate infrastructure, and seasonal employment. Migration of youth to nearby towns in search of work is common, and there is a growing need for awareness about health, hygiene, digital literacy, and government welfare schemes.</p>'
         + '<p><b>\u2756 Role of NSS in Addressing the Issues</b></p>'
-        + '<p>Through the NSS Social Internship, I contributed to addressing some of these issues by participating in awareness campaigns, cleanliness drives, plantation programmes, and digital literacy sessions. These small but sincere efforts helped create awareness among the villagers and encouraged them to participate in the development of their own community.</p>', '4');
+        + '<p>Through the NSS Social Internship, I contributed to addressing some of these issues by participating in awareness campaigns, cleanliness drives, plantation programmes, and digital literacy sessions. These small but sincere efforts helped create awareness among the villagers and encouraged them to take part in the development of their own community.</p>', '4');
 
       /* INTERNSHIP ACTIVITIES (single page) */
       html += pageShell('<div class="section-h">INTERNSHIP ACTIVITIES</div>'
@@ -413,9 +424,10 @@
         + '<li>Follow the guidance of faculty members and NSS Programme Officers.</li>'
         + '<li>Maintain cleanliness in the surrounding areas and complete assigned tasks responsibly.</li>'
         + '<li>Work with dedication and uphold the values of the National Service Scheme.</li></ul>'
-        + '<p><b>\u2756 Do\'s</b></p><ul class="obj"><li>Attend all activities regularly and on time.</li><li>Participate actively in awareness campaigns and other community service activities.</li><li>Encourage environmental conservation and cleanliness.</li></ul>'
+        + '<p><b>\u2756 Details of the Activities</b></p><p>During the internship, I participated in awareness campaigns on sanitation and environmental protection, tree plantation programmes, cleanliness drives, and digital literacy sessions for the villagers.</p>'
+        + '<p><b>\u2756 Do\'s</b></p><ul class="obj"><li>Attend all activities regularly and on time.</li><li>Participate actively in awareness campaigns and other community service activities.</li><li>Encourage environmental conservation and cleanliness.</li><li>Motivate fellow volunteers and community members to participate.</li></ul>'
         + '<p><b>\u2756 Don\'ts</b></p><ul class="obj"><li>Miss activities without prior permission.</li><li>Disrespect local people, customs, or traditions.</li><li>Litter or damage public property.</li><li>Neglect assigned responsibilities.</li></ul>'
-        + '<p><b>\u2756 Expected Learning</b></p><ul class="obj"><li>Develop leadership, teamwork, and communication skills.</li><li>Gain practical experience through community service.</li><li>Strengthen social responsibility and civic awareness.</li></ul>', '5');
+        + '<p><b>\u2756 Expected Learning</b></p><ul class="obj"><li>Develop leadership, teamwork, and communication skills.</li><li>Gain practical experience through community service.</li><li>Strengthen social responsibility and civic awareness.</li><li>Learn to plan and organize community programmes effectively.</li></ul>', '5');
 
       /* ACTIVITIES */
       d.acts.forEach(function (a, i) {
@@ -424,7 +436,7 @@
 
       /* OVERALL LEARNING OUTCOMES */
       html += pageShell('<div class="section-h">OVERALL LEARNING OUTCOMES</div>'
-        + '<p>The NSS Social Internship provided me with valuable practical experience and helped me understand the importance of serving society through community engagement. By participating in various activities, I was able to apply my knowledge in real-life situations while developing both personal and professional skills.</p>'
+        + '<p>The NSS Social Internship provided me with valuable practical experience and helped me understand the importance of serving society through community engagement. By participating in the various activities, I was able to apply my knowledge in real-life situations while developing both personal and professional skills.</p>'
         + '<p><b>The Overall Key Learning Outcomes are:</b></p><ul class="obj">'
         + '<li>Developed effective communication and interpersonal skills through interaction with students and villagers.</li>'
         + '<li>Understood the importance of active participation in community welfare activities.</li>'
@@ -437,29 +449,29 @@
         + '<li>Learned to plan and deliver awareness campaigns and community programmes effectively.</li>'
         + '<li>Developed patience, empathy, and the ability to communicate with people from different backgrounds.</li></ul>'
         + '<p><b>\u2756 Personal Development</b></p>'
-        + '<p>The internship contributed significantly to my personal growth. I became more confident in public speaking, more responsible in handling tasks, and more aware of the needs of society. Working closely with villagers taught me humility, respect, and the value of hard work.</p>'
+        + '<p>The internship contributed significantly to my personal growth. I became more confident in public speaking, more responsible in handling tasks, and more aware of the needs of society. Working closely with the villagers taught me humility, respect, and the value of hard work, and strengthened my ability to work patiently under different conditions.</p>'
         + '<p><b>\u2756 Contribution to Society</b></p>'
-        + '<p>By participating in the internship activities, I contributed in a small but meaningful way to the welfare of the community. The awareness created and the activities carried out will have a lasting positive effect on the villagers and will encourage them to continue such efforts in the future.</p>', String(6 + 3 * N));
+        + '<p>By participating in the internship activities, I contributed in a small but meaningful way to the welfare of the community. The awareness created and the activities carried out will have a lasting positive effect on the villagers and will encourage them to continue such efforts in the future. This experience also strengthened the bond between the students and the village community.</p>', String(6 + 3 * N));
 
       /* CHALLENGES */
       html += pageShell('<div class="section-h">CHALLENGES FACED DURING THE SOCIAL INTERNSHIP</div>'
-        + '<p>During the NSS Social Internship, I encountered several challenges while participating in community service activities. These challenges helped me develop problem-solving skills, adaptability, confidence, and teamwork while working with the local community.</p>'
+        + '<p>During the NSS Social Internship, I encountered several challenges while participating in community service activities. These challenges helped me develop problem-solving skills, adaptability, confidence, and teamwork while working with the local community, and each of these difficulties required patience, careful planning, and a positive attitude to overcome.</p>'
         + '<p><b>Challenges Faced:</b></p><ul class="obj">'
-        + '<li><b>Creating Environmental Awareness:</b> Convincing villagers about the importance of the initiatives undertaken required effective communication and continuous motivation.</li>'
-        + '<li><b>Understanding Community Needs:</b> Identifying the real needs and expectations of the community required careful observation and continued follow-up.</li>'
-        + '<li><b>Communicating with Diverse Groups:</b> Community members had different levels of awareness, so concepts had to be explained patiently and in a simple manner.</li>'
+        + '<li><b>Creating Environmental Awareness:</b> Convincing villagers about the importance of the initiatives required effective communication and continuous motivation.</li>'
+        + '<li><b>Understanding Community Needs:</b> Identifying the real needs and expectations of the community required careful observation and follow-up.</li>'
+        + '<li><b>Communicating with Diverse Groups:</b> Community members had different levels of awareness, so concepts had to be explained patiently and simply.</li>'
         + '<li><b>Limited Resources:</b> The availability of resources and facilities was sometimes limited, requiring careful planning and resourcefulness.</li>'
         + '<li><b>Time Management:</b> Completing all planned activities within the scheduled time required proper planning, coordination, and teamwork.</li>'
         + '<li><b>Language and Communication:</b> Interacting with villagers who speak different dialects required patience and the help of local volunteers.</li>'
         + '<li><b>Participation of Community Members:</b> Initially, some villagers were hesitant to take part, and sustained effort was needed to win their trust and cooperation.</li>'
         + '<li><b>Weather and Field Conditions:</b> Outdoor activities were sometimes affected by weather conditions and the remote location of the village.</li></ul>'
         + '<p><b>\u2756 How I Overcame These Challenges</b></p>'
-        + '<p>I overcame these challenges through regular communication, teamwork, and careful planning. I sought the guidance of the NSS Programme Officer and faculty members, worked closely with fellow volunteers, and interacted patiently with the villagers to understand their concerns. Each challenge taught me a valuable lesson in adaptability, perseverance, and leadership.</p>'
-        + '<p>Facing and overcoming these challenges was an important part of my learning. It made me more confident in handling difficult situations and helped me understand that obstacles can be converted into opportunities with the right attitude and effort.</p>', String(7 + 3 * N));
+        + '<p>I overcame these challenges through regular communication, teamwork, and careful planning, and by seeking the guidance of the NSS Programme Officer and faculty members. Working closely with fellow volunteers and interacting patiently with the villagers helped me understand their concerns and find practical solutions.</p>'
+        + '<p>Facing and overcoming these challenges was an important part of my learning. It made me more confident in handling difficult situations and helped me understand that obstacles can be converted into opportunities with the right attitude and effort. These challenges also taught me the value of patience, perseverance, and teamwork, and showed me that sincere effort, along with the cooperation of the community, can help overcome even the toughest situations.</p>', String(7 + 3 * N));
 
       /* SOCIAL IMPACT */
       html += pageShell('<div class="section-h">SOCIAL IMPACT</div>'
-        + '<p>The NSS Social Internship created a positive impact on the community by promoting environmental conservation, digital literacy, and community participation. Through various service activities, I contributed to the welfare of society while understanding the importance of teamwork, social responsibility, and sustainable development.</p>'
+        + '<p>The NSS Social Internship created a positive impact on the community by promoting environmental conservation, digital literacy, and community participation. Through various service activities, I contributed to the welfare of society while understanding the importance of teamwork, social responsibility, and sustainable development, and I experienced how even small, sincere efforts can bring visible improvement in the lives of people.</p>'
         + '<p><b>Social Impact of the Activities</b></p><ul class="obj">'
         + '<li>Created greater awareness among community members about the importance of the initiatives undertaken.</li>'
         + '<li>Encouraged active participation and cooperation from villagers throughout the internship.</li>'
@@ -471,21 +483,25 @@
         + '<li>Strengthened the sense of unity and cooperation among the community members.</li></ul>'
         + '<p><b>\u2756 Long-Term Benefits to the Community</b></p>'
         + '<p>The activities carried out during the internship created awareness that will benefit the community in the long run. Cleanliness drives and plantation programmes will keep the village clean and green, digital literacy sessions will help villagers access government services, and awareness campaigns will promote healthier and safer living practices.</p>'
-        + '<p>The internship also left a lasting impression on the villagers about the role of youth in nation building. It encouraged them to participate actively in development activities and to cooperate with future NSS teams visiting the village.</p>', String(8 + 3 * N));
+        + '<p>The internship also left a lasting impression on the villagers about the role of youth in nation building. It encouraged them to participate actively in development activities and to cooperate with future NSS teams visiting the village.</p>'
+        + '<p><b>\u2756 Personal Impact</b></p>'
+        + '<p>The internship transformed my outlook towards society and service. It gave me a deeper sense of purpose, made me more empathetic and responsible, and strengthened my belief that every individual can contribute to the betterment of society through consistent and sincere effort. The experience also motivated me to continue volunteering, to share what I learned with my classmates, and to take up more community service activities in the future.</p>', String(8 + 3 * N));
 
       /* CONCLUSION */
       html += pageShell('<div class="section-h">CONCLUSION</div>'
         + '<p>The NSS Social Internship was a valuable and enriching experience that helped me understand the true importance of community service, social responsibility, and active public participation. Through my involvement in various social internship activities at ' + esc(d.village) + ', ' + esc(d.mandal) + ', ' + esc(d.district) + ', I gained practical exposure to real-world social challenges.</p>'
         + '<p>This internship enhanced my communication, leadership, teamwork, teaching, and organizational skills while improving my confidence in interacting with students, villagers, and fellow volunteers. I learned to work responsibly, manage assigned tasks efficiently, and adapt to different situations during community service.</p>'
+        + '<p>The various activities such as awareness campaigns, cleanliness drives, plantation programmes, and digital literacy sessions gave me hands-on experience in planning and executing community service. Each activity taught me something new, whether it was interacting with the villagers, explaining the importance of environmental conservation, or working as a team under challenging conditions. These activities also helped me understand how community welfare programmes can bring real benefits to rural areas.</p>'
         + '<p>Overall, the Social Internship strengthened my sense of discipline, social responsibility, empathy, and commitment towards serving the community. It inspired me to continue participating in NSS activities and contribute towards building a greener, digitally empowered, and socially responsible society.</p>'
         + '<p>The internship also helped me understand the importance of teamwork and coordination. Every activity was completed successfully because of the collective effort of the NSS volunteers, the guidance of the Programme Officer, and the cooperation of the villagers. This experience taught me that social change is best achieved through unity and sincere effort.</p>'
-        + '<p>I firmly believe that the experiences and lessons gained during this internship will guide me in my future endeavours. I will continue to participate in community service and encourage others to do the same, so that together we can contribute towards the progress of our society and nation.</p>'
+        + '<p>Above all, the internship reinforced my belief that every citizen has a responsibility towards society. The time spent at ' + esc(d.village) + ' taught me that even small acts of service, when carried out sincerely, can bring about meaningful change in the lives of people. This experience has made me more conscious of the needs of the community and more eager to contribute my time and effort for the welfare of others.</p>'
+        + '<p>I firmly believe that the experiences and lessons gained during this internship will guide me in my future endeavours. The values of service, discipline, and teamwork that I learnt will remain with me throughout my life. I will continue to participate in community service and encourage others to do the same, so that together we can contribute towards the progress of our society and nation.</p>'
         + '<p><b>' + val('f_name') + '</b> &nbsp;|&nbsp; ' + val('f_regno') + '</p>', String(9 + 3 * N));
 
       /* ANNEXURES / CERTIFICATES */
       html += pageShell('<div class="section-h">ANNEXURES / CERTIFICATES</div>'
         + '<p>' + esc(d.annex || 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:') + '</p>'
-        + ((state.certImg && state.certImg.src) ? '<img class="certimg" src="@cert@">' : '<div class="img-placeholder">Upload the certificate image</div>'), String(10 + 3 * N));
+        + ((state.certImg && state.certImg.src) ? '<img class="certimg" src="@cert@">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N));
 
       return html;
     }
@@ -541,6 +557,7 @@
       if (reset) reset.style.display = (z !== 1 || (im.x || 0) !== 0 || (im.y || 0) !== 0) ? '' : 'none';
     }
     function onZoomClick(e) {
+      if (editingEnabled) return;
       var b = e.target.closest('.pbtn');
       if (!b) return;
       var act = +b.dataset.act, di = +b.dataset.di, ki = +b.dataset.ki;
@@ -558,6 +575,7 @@
       if (frame) refreshCtrl(frame, im);
     }
     function onPhotoDown(e) {
+      if (editingEnabled) return;
       var t = e.target;
       if (t.closest('.pctrl')) return;
       var img = t.closest('.pframe img');
@@ -599,6 +617,67 @@
       stage.addEventListener('click', onZoomClick);
       stage.addEventListener('mousedown', onPhotoDown);
       stage.addEventListener('touchstart', onPhotoDown, { passive: false });
+    })();
+
+    /* ================= PDF-editor style edit mode ================= */
+    var editingEnabled = false;
+    function toggleEdit() {
+      editingEnabled = !editingEnabled;
+      var stage = document.getElementById('docStage');
+      var btn = document.getElementById('editBtn');
+      if (stage) {
+        stage.classList.toggle('editing', editingEnabled);
+        stage.querySelectorAll('.doc-page').forEach(function (p) {
+          if (editingEnabled) {
+            p.contentEditable = 'true';
+            p.querySelectorAll('img, .college-head, .pframe, .pctrl, .coverimg').forEach(function (el) {
+              el.contentEditable = 'false';
+            });
+          } else {
+            p.contentEditable = 'false';
+          }
+        });
+      }
+      if (btn) {
+        btn.classList.toggle('btn-edit-on', editingEnabled);
+        btn.textContent = editingEnabled ? '\u2713 Editing ON' : '\u270E Edit';
+        btn.title = editingEnabled ? 'Click again to exit edit mode' : 'Edit the document text directly in the preview';
+      }
+    }
+
+    /* ================= Save As dialog (Ctrl+P) ================= */
+    function openSaveDialog() {
+      var m = document.getElementById('saveModal');
+      if (!m) { window.print(); return; }
+      m.hidden = false;
+      m.classList.add('open');
+    }
+    function closeSaveDialog() {
+      var m = document.getElementById('saveModal');
+      if (!m) return;
+      m.classList.remove('open');
+      m.hidden = true;
+    }
+    function saveAsPdf() {
+      closeSaveDialog();
+      window.print();
+    }
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        openSaveDialog();
+      }
+      if (e.key === 'Escape') { closeSaveDialog(); }
+    });
+
+    /* Auto-fill the cover-page name with initials from Student Details */
+    (function () {
+      var fn = $('f_name'), cn = $('f_cover_name');
+      if (fn && cn) {
+        fn.addEventListener('input', function () {
+          if (!cn.value.trim()) { cn.value = initialsName(fn.value); }
+        });
+      }
     })();
 
     /* ================= Demo data ================= */
@@ -649,6 +728,7 @@
     function resetForm() {
       document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) { el.value = ''; });
       $('f_class').value = 'II B.Tech II Semester, CSE';
+      $('f_population').value = '500';
       clearSingleImages();
       state.activities = [{ id: 1, days: [{ img: [] }, { img: [] }] }, { id: 2, days: [{ img: [] }, { img: [] }] }, { id: 3, days: [{ img: [] }, { img: [] }] }];
       actId = 4;
@@ -656,8 +736,8 @@
       render();
     }
 
-    document.addEventListener('input', function () { render(); });
-    document.addEventListener('change', function () { render(); });
+    document.addEventListener('input', function () { if (!editingEnabled) render(); });
+    document.addEventListener('change', function () { if (!editingEnabled) render(); });
     window.addEventListener('resize', function () { fitDocScale(); });
     window.addEventListener('scroll', function () {
       var h = document.querySelector('.app-header');
@@ -689,12 +769,16 @@
     (function () {
       var toast = document.getElementById('welcomeToast');
       if (!toast) return;
+      function isWindowView() {
+        return window.innerWidth > 1024 && !('ontouchstart' in window);
+      }
       function showToast() {
         toast.classList.add('show');
         setTimeout(function () {
           toast.classList.remove('show');
         }, 2000);
       }
+      if (isWindowView()) return;
       if (document.readyState === 'complete') { setTimeout(showToast, 300); }
       else { window.addEventListener('load', function () { setTimeout(showToast, 300); }); }
     })();
