@@ -185,6 +185,8 @@
           end: fmtDate(rawVal('act_' + a.id + '_end')), hours: rawVal('act_' + a.id + '_hours'),
           cap0: rawVal('act_' + a.id + '_cap0'), cap1: rawVal('act_' + a.id + '_cap1'), days: a.days
         };
+        o.cap0 = effectiveCap(o, 0);
+        o.cap1 = effectiveCap(o, 1);
         return o;
       });
       return {
@@ -199,6 +201,15 @@
     }
 
     /* ================= Document builders ================= */
+    function effectiveCap(a, di) {
+      var typed = rawVal('act_' + a.id + '_cap' + di);
+      if (typed && typed.trim()) return typed;
+      var nm = a.name || '[Name of the Activity]';
+      var loc = a.location || '[Location]';
+      var th = a.theme || '[Theme of the Activity]';
+      if (di === 0) return 'DAY 1: Participated in ' + nm + ' activities at ' + loc + '. Interacted with the local community and contributed to the ' + th + ' initiative as part of the NSS Social Internship.';
+      return 'DAY 2: Continued the ' + nm + ' activities and promoted awareness about ' + th + ' among the community members with the support of fellow NSS volunteers and local residents.';
+    }
     function collegeHead() {
       return '<table class="college-head"><tr>'
         + '<td class="logo"><img src="@logo1@"></td>'
@@ -256,8 +267,8 @@
     }
     function activityBlock(a, i) {
       var s = 6 + 3 * i;
-      var cap1 = rawVal('act_' + a.id + '_cap0') || ('DAY 1: Participated in ' + a.name + ' activities at ' + a.location + '. Interacted with the local community and contributed to the ' + a.theme + ' initiative as part of the NSS Social Internship.');
-      var cap2 = rawVal('act_' + a.id + '_cap1') || ('DAY 2: Continued the ' + a.name + ' activities and promoted awareness about ' + a.theme + ' among the community members with the support of fellow NSS volunteers and local residents.');
+      var cap1 = effectiveCap(a, 0);
+      var cap2 = effectiveCap(a, 1);
       var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '[Name of Social Internship Activity]') + '</div>';
       b += '<table class="act-meta">'
         + '<tr><td class="lbl">Theme</td><td>' + esc(a.theme || '[Theme of the Activity]') + '</td>'
