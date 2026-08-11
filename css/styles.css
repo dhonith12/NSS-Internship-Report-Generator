@@ -762,7 +762,9 @@
 
     .doc-page .content {
       padding: 25.4mm 25.4mm 25.4mm 31.75mm;
-      position: relative
+      position: relative;
+      text-align: justify;
+      text-justify: inter-word
     }
 
     .doc-page .college-head {
@@ -1145,7 +1147,8 @@
       font-size: 12pt;
       font-family: 'Times New Roman', serif;
       text-align: justify;
-      line-height: 1.4
+      line-height: 1.4;
+      overflow-wrap: break-word
     }
 
     .doc-page .pcap {
@@ -1157,7 +1160,7 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       overflow: hidden
     }
 
@@ -1168,14 +1171,17 @@
       color: #0d9488;
       letter-spacing: 1pt;
       margin-bottom: 2mm;
-      text-align: left
+      text-align: left;
+      flex-shrink: 0
     }
 
     .doc-page .pcap-text {
       font-size: 12pt;
       font-family: 'Times New Roman', serif;
       text-align: justify;
-      line-height: 1.4
+      line-height: 1.4;
+      flex-shrink: 0;
+      overflow-wrap: break-word
     }
 
     .doc-page .mapimg {
@@ -1211,7 +1217,9 @@
       font-size: 10.5pt;
       font-family: 'Times New Roman', serif;
       font-weight: bold;
-      margin-top: 1mm
+      margin-top: 1mm;
+      text-align: justify;
+      text-align-last: center
     }
 
     .doc-page .certimg {
@@ -1412,28 +1420,6 @@
       line-height: 1.6;
       text-align: left;
       word-break: break-all
-    }
-
-    .admin-list {
-      text-align: left;
-      margin: 6px 0
-    }
-
-    .admin-list li {
-      margin: 4px 0;
-      font-size: 13px
-    }
-
-    .admin-list a {
-      color: var(--primary);
-      cursor: pointer
-    }
-
-    .logo-stats {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 3px;
-      letter-spacing: .2px
     }
 
     .group .hint {

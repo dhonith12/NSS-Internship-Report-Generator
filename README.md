@@ -54,8 +54,6 @@
 | 📐 | **Uniform Image Boxes** | All four photo boxes on a page are identical in size, **including** the caption bar |
 | 🏷️ | **Figure Numbers Outside Images** | `Fig. 1`, `Fig. 2`… rendered cleanly below each frame |
 | 💾 | **Silent Auto-save (local)** | Every keystroke is saved **on this device only** and restored automatically on the next visit — no profile selector, no user action needed |
-| ⬆️ | **Auto-sync to Repository** | Every time a PDF is saved, the report XML **plus compressed photos** are pushed to `data/<user>/` automatically with the embedded token — only the **latest submission** is kept |
-| 👁️ | **Live Visit & Generate Counters** | Header shows **Views** (one per device) and total **Generated** PDF reports |
 | 📄 | **Smart PDF Filename** | Saving a PDF suggests `<StudentName>_Nss_Report.pdf` automatically |
 | 🌗 | **Light / Dark / Auto themes** | Dark mode keeps the document preview crisp and identical to light mode |
 | 📁 | **"Choose File" → "Reupload File"** | Upload slots show the selected file name (e.g. `1.jpg`) instead of a bulky preview |
@@ -117,7 +115,6 @@ No build step. No package manager. No internet connection. Just open and start t
 5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.
 6. **Save as PDF** — click **📄 Save As** (or press `Ctrl+P`), choose *Save as PDF* in the print dialog — the suggested filename is `<StudentName>_Nss_Report.pdf`.
 7. **Keeps editing later** — everything you type is auto-saved silently **on this device**, so a refresh continues right where you left off.
-8. **Auto-syncs to the repository** — saving the PDF automatically pushes the report XML **and** its photos to `data/<user>/` (embedded token, latest submission wins).
 
 > 💡 The document page is scaled to **fit the preview pane** (`--docscale`) so you always see the *whole* page, while the actual printed output stays true-to-size A4.
 
@@ -146,12 +143,7 @@ NSS-Internship-Report-Generator/
 │   └── styles.css         # All styling: layout, themes, preview & A4 print rules
 │
 ├── ⚙️  js/
-│    └── app.js            # All logic: state, live render, photo adjust, theme, demo, uploads, auto-save, GitHub submit
-│
-├── 📁 data/               # Submitted reports (pushed by the Submit feature)
-│    └── <student>/<student>.xml + photos
-│
-├── 📊 stats.json          # Live visit & generated counters
+│    └── app.js            # All logic: state, live render, photo adjust, theme, demo, uploads, auto-save
 │
 └── 📘 README.md           # This file
 ```
@@ -181,24 +173,9 @@ Your choice is remembered automatically between visits.
 
 ---
 
-## 💾 Saving, Submitting & Data
+## 💾 Saving & Data
 
 - **Silent auto-save (local)** — every keystroke is stored in this browser under the entered student name and restored automatically on the next visit. No profile selector, no messages — it just works. Photos are re-uploaded each session.
-- **Auto-sync on Save As** — when you save the PDF, the report is automatically pushed to the repository:
-  - `data/<student>/<student>.xml` — the full report data
-  - compressed photo images next to the XML
-  - the repository-wide `stats.json` counters
-  - Only the **latest** submission per student is kept — each new save overwrites the previous one.
-- The GitHub token is **embedded in `js/app.js`** (`GH_TOKEN`) — users never see or enter a token.
-
----
-
-## 👁️ Visit & Generate Counters
-
-- The header shows two live counters synced to the repository `stats.json`:
-  - **Views** — incremented once per device/browser (a refresh won't double-count)
-  - **Generated** — incremented every time a PDF is saved
-- If the repository isn't reachable the app simply keeps the last known counts — it never blocks editing.
 
 ---
 
