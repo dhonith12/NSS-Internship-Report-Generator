@@ -10,7 +10,6 @@
 
     /* ================= State ================= */
     var state = {
-      coverImg: null,
       geoImg: [null, null, null, null],
       activities: [
         { id: 1, days: [{ img: [] }, { img: [] }] },
@@ -579,7 +578,7 @@
     function render() {
       var d = collect();
       var html = buildDocHTML(d);
-      html = html.replace(/@cover@/g, (state.coverImg && state.coverImg.src) || ('data:' + IMG.cover.mime + ';base64,' + IMG.cover.b64))
+      html = html.replace(/@cover@/g, 'data:' + IMG.cover.mime + ';base64,' + IMG.cover.b64)
         .replace(/@logo1@/g, 'data:' + IMG.logo1.mime + ';base64,' + IMG.logo1.b64)
         .replace(/@logo2@/g, 'data:' + IMG.logo2.mime + ';base64,' + IMG.logo2.b64)
         .replace(/@map@/g, (state.geoImg[0] && state.geoImg[0].src) || ('data:' + IMG.map.mime + ';base64,' + IMG.map.b64))
@@ -818,9 +817,7 @@
     }
 
     function clearSingleImages() {
-      state.coverImg = null; state.geoImg = [null, null, null, null]; state.certImg = null;
-      var c = $('coverImgLbl'); if (c) { c.textContent = 'Choose File'; }
-      var cn = $('coverImgName'); if (cn) { cn.textContent = ''; }
+      state.geoImg = [null, null, null, null]; state.certImg = null;
       for (var i = 0; i < 4; i++) {
         var l = $('geoImgLbl' + i); if (l) { l.textContent = 'Choose File'; }
         var n = $('geoImgName' + i); if (n) { n.textContent = ''; }

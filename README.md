@@ -109,7 +109,7 @@ No build step. No package manager. No internet connection. Just open and start t
 ```
 
 1. **Fill in the details** on the left — theme, branch, student name, registration number, internship period, village, community profile, occupations and social issues.
-2. **Upload your images** — cover photo, village map, activity evidence (up to 4 photos per day × 2 days), and the certificate. The button switches to **Reupload File** and shows the filename.
+2. **Upload your images** — village map, activity evidence (up to 4 photos per day × 2 days), and the certificate. The button switches to **Reupload File** and shows the filename. The cover page uses a built-in design, so there is no cover image upload.
 3. **Watch the preview** — the right panel builds the full A4 report live as you type.
 4. **Fine-tune photos** — use the on-frame **+ / − / reset** buttons or drag to pan each photo inside its frame.
 5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.
