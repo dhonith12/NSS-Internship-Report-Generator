@@ -11,6 +11,7 @@
     /* ================= State ================= */
     var state = {
       geoImg: [null, null, null, null],
+      certs: [{}],
       activities: [
         { id: 1, days: [{ img: [] }, { img: [] }] },
         { id: 2, days: [{ img: [] }, { img: [] }] },
@@ -105,21 +106,42 @@
       img.onerror = function () { cb(src); };
       img.src = src;
     }
-    function readSingleImage(ev, slot) {
+    function certSlotHTML(c, i) {
+      var html = '<div class="cert-slot">';
+      html += '<div class="cert-slot-head"><span class="slot-label">Certificate ' + (i + 1) + '</span>'
+        + (state.certs.length > 1 ? '<button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="removeCert(' + i + ')">Remove</button>' : '')
+        + '</div>';
+      html += '<label class="file-btn"><span class="fb-label">' + (c && c.src ? 'Reupload File' : 'Choose File') + '</span>'
+        + '<input type="file" accept="image/*" onchange="readCertImage(event,' + i + ')"></label>'
+        + '<span class="file-name">' + esc((c && c.name) || '') + '</span>';
+      html += '</div>';
+      return html;
+    }
+    function renderCerts() {
+      var wrap = document.getElementById('certSlots');
+      if (wrap) { wrap.innerHTML = state.certs.map(certSlotHTML).join(''); }
+    }
+    function addCert() {
+      state.certs.push({});
+      renderCerts();
+      render();
+    }
+    function removeCert(idx) {
+      if (state.certs.length <= 1) return;
+      state.certs.splice(idx, 1);
+      renderCerts();
+      render();
+    }
+    function readCertImage(ev, idx) {
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
       var r = new FileReader();
       r.onload = function () {
-        function apply(src) {
-          state[slot] = { src: src, mime: 'image/jpeg', name: f.name };
-          var lbl = $(slot + 'Lbl');
-          if (lbl) { lbl.textContent = 'Reupload File'; }
-          var nm = $(slot + 'Name');
-          if (nm) { nm.textContent = f.name; }
+        stripBlackFrame(r.result, function (src) {
+          state.certs[idx] = { src: src, mime: 'image/jpeg', name: f.name };
+          renderCerts();
           render();
-        }
-        if (slot === 'certImg') { stripBlackFrame(r.result, apply); }
-        else { apply(r.result); }
+        });
       };
       r.readAsDataURL(f);
     }
@@ -195,7 +217,8 @@
         theme: rawVal('f_theme'), branch: rawVal('f_branch'), section: rawVal('f_section'), sem: rawVal('f_sem'),
         po: rawVal('f_po'), dept: rawVal('f_dept'), annex: rawVal('f_annex'),
         coverName: rawVal('f_cover_name') || initialsName(rawVal('f_name')),
-        population: rawVal('f_population') || '500'
+        population: rawVal('f_population') || '500',
+        certs: state.certs
       };
     }
 
@@ -372,21 +395,14 @@
         + '<figcaption>Fig. 1: Map of ' + esc(d.village) + ' Village</figcaption></figure>';
     }
     function profileBody(d) {
-      var txt = rawVal('f_profile') || '';
-      if (txt) {
-        var paras = txt.split(/\n+/).map(function (p) { return p.trim(); }).filter(Boolean);
-        return paras.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-      }
       return '<p>' + esc(d.village) + ' is a small rural settlement whose residents depend mainly on agriculture and related activities. The community is closely knit, with people actively taking part in local development and welfare programmes. The children of the village attend the nearby government and private schools, and the area is served by basic facilities such as roads, electricity, and public transport.</p>';
     }
     function occupationList(d) {
-      var list = (rawVal('f_occupations') || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
-      if (!list.length) list = ['Agriculture and farming', 'Agricultural labour', 'Dairy farming', 'Small-scale businesses', 'Daily wage labour', 'Self-employment'];
+      var list = ['Agriculture and farming', 'Agricultural labour', 'Dairy farming', 'Small-scale businesses', 'Daily wage labour', 'Self-employment'];
       return list.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('');
     }
     function socialIssuesList(d) {
-      var list = (rawVal('f_social_issues') || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
-      if (!list.length) list = ['Limited awareness about environmental conservation and sanitation.', 'Improper waste disposal in some areas of the village.', 'Limited access to digital literacy and modern technology.', 'Lack of sufficient awareness about government schemes and healthcare.'];
+      var list = ['Limited awareness about environmental conservation and sanitation.', 'Improper waste disposal in some areas of the village.', 'Limited access to digital literacy and modern technology.', 'Lack of sufficient awareness about government schemes and healthcare.'];
       return list.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('');
     }
 
@@ -566,10 +582,13 @@
         + '<p>I firmly believe that the experiences and lessons gained during this internship will guide me in my future endeavours. The values of service, discipline, and teamwork that I learnt will remain with me throughout my life. I will continue to participate in community service and encourage others to do the same, so that together we can contribute towards the progress of our society and nation.</p>'
         + '<p><b>' + val('f_name') + '</b> &nbsp;|&nbsp; ' + val('f_regno') + '</p>', String(9 + 3 * N));
 
-      /* ANNEXURES / CERTIFICATES */
-      html += pageShell('<div class="section-h">ANNEXURES / CERTIFICATES</div>'
-        + '<p>' + esc(d.annex || 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:') + '</p>'
-        + ((state.certImg && state.certImg.src) ? '<img class="certimg" src="@cert@">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N));
+      /* ANNEXURES / CERTIFICATES (one certificate per page) */
+      var certs = (d.certs && d.certs.length) ? d.certs : [null];
+      certs.forEach(function (cert, ci) {
+        html += pageShell('<div class="section-h">ANNEXURES / CERTIFICATES</div>'
+          + '<p>' + esc(d.annex || 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:') + '</p>'
+          + ((cert && cert.src) ? '<img class="certimg" src="' + cert.src + '">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N + ci));
+      });
 
       return html;
     }
@@ -581,8 +600,7 @@
       html = html.replace(/@cover@/g, 'data:' + IMG.cover.mime + ';base64,' + IMG.cover.b64)
         .replace(/@logo1@/g, 'data:' + IMG.logo1.mime + ';base64,' + IMG.logo1.b64)
         .replace(/@logo2@/g, 'data:' + IMG.logo2.mime + ';base64,' + IMG.logo2.b64)
-        .replace(/@map@/g, (state.geoImg[0] && state.geoImg[0].src) || ('data:' + IMG.map.mime + ';base64,' + IMG.map.b64))
-        .replace(/@cert@/g, (state.certImg && state.certImg.src) || ('data:' + IMG.cert.mime + ';base64,' + IMG.cert.b64));
+        .replace(/@map@/g, (state.geoImg[0] && state.geoImg[0].src) || ('data:' + IMG.map.mime + ';base64,' + IMG.map.b64));
       html = html.replace(/<div class="doc-page[\s\S]*?(?=<div class="doc-page|$)/g, function (pg) {
         return '<div class="page-wrap">' + pg + '</div>';
       });
@@ -801,9 +819,6 @@
       $('f_section').value = 'F';
       $('f_sem').value = 'VII';
       $('f_po').value = 'Dr. S J R K PADMINIVALLI V';
-      $('f_profile').value = 'Sample Village is a small rural settlement whose residents depend mainly on agriculture and related activities. The community is closely knit and actively participates in local development and welfare programmes.';
-      $('f_occupations').value = 'Agriculture and farming\nAgricultural labour\nDairy farming\nSmall-scale businesses\nDaily wage labour';
-      $('f_social_issues').value = 'Limited awareness about environmental conservation and sanitation.\nImproper waste disposal in some areas of the village.\nLimited access to digital literacy and modern technology.';
       $('f_annex').value = 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:';
       clearSingleImages();
       state.activities = [
@@ -817,13 +832,12 @@
     }
 
     function clearSingleImages() {
-      state.geoImg = [null, null, null, null]; state.certImg = null;
+      state.geoImg = [null, null, null, null]; state.certs = [{}];
       for (var i = 0; i < 4; i++) {
         var l = $('geoImgLbl' + i); if (l) { l.textContent = 'Choose File'; }
         var n = $('geoImgName' + i); if (n) { n.textContent = ''; }
       }
-      var img = $('certImgLbl'); if (img) { img.textContent = 'Choose File'; }
-      var iname = $('certImgName'); if (iname) { iname.textContent = ''; }
+      renderCerts();
     }
     function resetForm() {
       document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) { el.value = ''; });
@@ -925,5 +939,6 @@
 
     restoreLastProfile();
     renderActivities();
+    renderCerts();
     render();
   

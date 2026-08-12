@@ -46,6 +46,7 @@
 | 📐 | **College-Format A4 Layout** | Every section fits on a **single A4 page** — Times New Roman 12pt body, 16pt bold main headings, 14pt bold subheadings, 1.5 line spacing, justified text and page numbers at the bottom |
 | 🏷️ | **Effective Day-Caption Frames** | Every photo page shows a **DAY 1 / DAY 2** caption — by default as **3 photo frames + 1 caption textbox**; when all 4 photos are filled, the caption moves into a bar below the 2×2 grid |
 | 📜 | **Standard Certificate Format** | Auto-generated certificate follows the official 3-paragraph NSS format — student, activities, and programme focus — filled from your data |
+| 📑 | **Multiple Annexures / Certificates** | Add any number of certificate images — each one renders on its own A4 page, centred and scaled to fit the page |
 | ✏️ | **In-Preview Edit Mode** | Click **✏ Edit** to edit the document text directly in the preview — like a PDF editor, with auto-update paused while you type |
 | 👤 | **Cover Name Auto-fill** | The cover-page name is auto-filled with your initials + surname (e.g. `T.V.N.S. DHONI`) from Student Details — fully editable |
 | 👥 | **Village Population Field** | Enter the village population (default `500`) and it appears in the community profile findings |
@@ -108,8 +109,8 @@ No build step. No package manager. No internet connection. Just open and start t
  └─────────────────────────────┘        └──────────────────────────────┘
 ```
 
-1. **Fill in the details** on the left — theme, branch, student name, registration number, internship period, village, community profile, occupations and social issues.
-2. **Upload your images** — village map, activity evidence (up to 4 photos per day × 2 days), and the certificate. The button switches to **Reupload File** and shows the filename. The cover page uses a built-in design, so there is no cover image upload.
+1. **Fill in the details** on the left — theme, branch, student name, registration number, internship period, and village details. The community profile, occupations and social issues use built-in standard content.
+2. **Upload your images** — village map, activity evidence (up to 4 photos per day × 2 days), and one or more certificates / annexures (each on its own page). The button switches to **Reupload File** and shows the filename. The cover page uses a built-in design, so there is no cover image upload.
 3. **Watch the preview** — the right panel builds the full A4 report live as you type.
 4. **Fine-tune photos** — use the on-frame **+ / − / reset** buttons or drag to pan each photo inside its frame.
 5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.

@@ -99,16 +99,6 @@
         </div>
 
         <div class="group">
-          <div class="group-title">&#127760; Community Profile</div>
-          <div class="field"><label>Community Profile Description</label><textarea id="f_profile" rows="3"
-              placeholder="Describe the village, its people, culture and living conditions"></textarea></div>
-          <div class="field"><label>Major Occupations (one per line)</label><textarea id="f_occupations" rows="3"
-              placeholder="e.g. Agriculture and farming"></textarea></div>
-          <div class="field"><label>Social Issues (one per line)</label><textarea id="f_social_issues" rows="3"
-              placeholder="e.g. Limited awareness about sanitation"></textarea></div>
-        </div>
-
-        <div class="group">
           <div class="group-title">&#128506; Village Map / Geographical Image</div>
           <div class="img-slot">
             <span class="slot-label">Village Map / Image</span>
@@ -131,11 +121,9 @@
           <div class="field"><label>Annexure Description</label><textarea id="f_annex" rows="2"
               placeholder="The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:"></textarea>
           </div>
-          <div class="img-slot">
-            <span class="slot-label">Certificate Image</span>
-            <label class="file-btn"><span class="fb-label" id="certImgLbl">Choose File</span><input
-                type="file" accept="image/*" onchange="readSingleImage(event,'certImg')"></label>
-            <span class="file-name" id="certImgName"></span>
+          <div id="certSlots"></div>
+          <div class="actions-bar no-print">
+            <button class="btn btn-ghost" style="flex:1" onclick="addCert()">&#43; Add Certificate</button>
           </div>
         </div>
 
