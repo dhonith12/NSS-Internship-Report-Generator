@@ -109,13 +109,20 @@
     function certSlotHTML(c, i) {
       var html = '<div class="cert-slot">';
       html += '<div class="cert-slot-head"><span class="slot-label">Certificate ' + (i + 1) + '</span>'
-        + (state.certs.length > 1 ? '<button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="removeCert(' + i + ')">Remove</button>' : '')
+        + '<button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="removeCert(' + i + ')">Remove</button>'
         + '</div>';
-      html += '<label class="file-btn"><span class="fb-label">' + (c && c.src ? 'Reupload File' : 'Choose File') + '</span>'
-        + '<input type="file" accept="image/*" onchange="readCertImage(event,' + i + ')"></label>'
-        + '<span class="file-name">' + esc((c && c.name) || '') + '</span>';
+      html += '<div class="field"><label>Annexure Description</label><textarea id="cert_' + i + '_desc" rows="2" oninput="saveCertDesc(' + i + ',this.value)" placeholder="The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:">' + escAttr((c && c.desc) || '') + '</textarea></div>';
+      html += '<label class="cert-drop">'
+        + '<input type="file" accept="image/*" onchange="readCertImage(event,' + i + ')">'
+        + '<svg class="cert-drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 16a1 1 0 0 1-1-1V6.41l-2.29 2.3a1 1 0 0 1-1.42-1.42l4-4a1 1 0 0 1 1.42 0l4 4a1 1 0 1 1-1.42 1.42L13 6.41V15a1 1 0 0 1-1 1zM5 20h14a1 1 0 0 0 0-2H5a1 1 0 0 0 0 2z"/></svg>'
+        + '<span class="cert-drop-text">' + (c && c.src ? 'Reupload certificate image' : 'Click to upload certificate image') + '</span>'
+        + '<span class="cert-drop-file">' + esc((c && c.name) || 'PNG / JPG file') + '</span>'
+        + '</label>';
       html += '</div>';
       return html;
+    }
+    function saveCertDesc(idx, v) {
+      if (state.certs[idx]) { state.certs[idx].desc = v; }
     }
     function renderCerts() {
       var wrap = document.getElementById('certSlots');
@@ -215,7 +222,7 @@
         period: fmtPeriod(), village: rawVal('f_village'), mandal: rawVal('f_mandal'), district: rawVal('f_district'),
         state: rawVal('f_state'), pincode: rawVal('f_pincode'), coordinator: rawVal('f_coordinator'), acts: acts,
         theme: rawVal('f_theme'), branch: rawVal('f_branch'), section: rawVal('f_section'), sem: rawVal('f_sem'),
-        po: rawVal('f_po'), dept: rawVal('f_dept'), annex: rawVal('f_annex'),
+        po: rawVal('f_po'), dept: rawVal('f_dept'),
         coverName: rawVal('f_cover_name') || initialsName(rawVal('f_name')),
         population: rawVal('f_population') || '500',
         certs: state.certs
@@ -582,12 +589,13 @@
         + '<p>I firmly believe that the experiences and lessons gained during this internship will guide me in my future endeavours. The values of service, discipline, and teamwork that I learnt will remain with me throughout my life. I will continue to participate in community service and encourage others to do the same, so that together we can contribute towards the progress of our society and nation.</p>'
         + '<p><b>' + val('f_name') + '</b> &nbsp;|&nbsp; ' + val('f_regno') + '</p>', String(9 + 3 * N));
 
-      /* ANNEXURES / CERTIFICATES (one certificate per page) */
+      /* ANNEXURES / CERTIFICATES (one certificate per page, image fills space below its description) */
       var certs = (d.certs && d.certs.length) ? d.certs : [null];
       certs.forEach(function (cert, ci) {
+        var desc = (cert && cert.desc && String(cert.desc).trim()) ? cert.desc : 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:';
         html += pageShell('<div class="section-h">ANNEXURES / CERTIFICATES</div>'
-          + '<p>' + esc(d.annex || 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:') + '</p>'
-          + ((cert && cert.src) ? '<img class="certimg" src="' + cert.src + '">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N + ci));
+          + '<p><b>Certificate ' + (ci + 1) + ':</b> ' + esc(desc) + '</p>'
+          + ((cert && cert.src) ? '<img class="certimg" src="' + cert.src + '">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N + ci), 'annex');
       });
 
       return html;
@@ -819,7 +827,6 @@
       $('f_section').value = 'F';
       $('f_sem').value = 'VII';
       $('f_po').value = 'Dr. S J R K PADMINIVALLI V';
-      $('f_annex').value = 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:';
       clearSingleImages();
       state.activities = [
         { id: 1, name: 'Activity 1 Name', theme: 'Environmental Conservation', start: '2026-05-01', location: 'Sample Village, Sample Mandal', end: '2026-05-02', hours: '8 Hours', days: [{ img: [] }, { img: [] }] },
@@ -910,6 +917,7 @@
           cap0: rawVal('act_' + a.id + '_cap0'), cap1: rawVal('act_' + a.id + '_cap1')
         };
       });
+      d.certs = state.certs.map(function (c) { return { desc: (c && c.desc) || '' }; });
       return d;
     }
     function autoSave() {
@@ -921,24 +929,47 @@
       } catch (e) { }
     }
     function restoreLastProfile() {
-      var nm = '';
-      try { nm = localStorage.getItem('nss_last_user') || ''; } catch (e) { }
-      if (!nm) return;
-      var data = null;
-      try { data = JSON.parse(localStorage.getItem(profKey(nm))); } catch (e) { }
-      if (!data) return;
-      document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) {
-        if (data[el.id] != null) el.value = data[el.id];
-      });
-      state.activities = (data.activities || []).map(function (a) {
-        return { id: a.id, name: a.name, theme: a.theme, start: a.start, end: a.end, location: a.location, hours: a.hours, cap0: a.cap0, cap1: a.cap1, days: [{ img: [] }, { img: [] }] };
-      });
-      while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
-      actId = Math.max(actId, (state.activities[state.activities.length - 1].id || 0) + 1);
+      try {
+        var nm = '';
+        try { nm = localStorage.getItem('nss_last_user') || ''; } catch (e) { }
+        if (!nm) return;
+        var data = null;
+        try { data = JSON.parse(localStorage.getItem(profKey(nm))); } catch (e) { }
+        if (!data || typeof data !== 'object') return;
+        document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) {
+          if (data[el.id] != null) el.value = data[el.id];
+        });
+        var saved = Array.isArray(data.activities) ? data.activities : [];
+        state.activities = saved.map(function (a, i) {
+          return {
+            id: i + 1, name: a && a.name, theme: a && a.theme, start: a && a.start,
+            end: a && a.end, location: a && a.location, hours: a && a.hours,
+            cap0: a && a.cap0, cap1: a && a.cap1, days: [{ img: [] }, { img: [] }]
+          };
+        });
+        actId = state.activities.length + 1;
+        while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
+        state.certs = (Array.isArray(data.certs) && data.certs.length)
+          ? data.certs.map(function (c) { return { desc: (c && c.desc) || '' }; })
+          : [{}];
+      } catch (e) {
+        state.activities = [{ id: 1, days: [{ img: [] }, { img: [] }] }, { id: 2, days: [{ img: [] }, { img: [] }] }, { id: 3, days: [{ img: [] }, { img: [] }] }];
+        state.certs = [{}];
+        actId = 4;
+      }
     }
 
-    restoreLastProfile();
-    renderActivities();
-    renderCerts();
-    render();
+    try {
+      restoreLastProfile();
+      renderActivities();
+      renderCerts();
+      render();
+    } catch (e) {
+      state.activities = [{ id: 1, days: [{ img: [] }, { img: [] }] }, { id: 2, days: [{ img: [] }, { img: [] }] }, { id: 3, days: [{ img: [] }, { img: [] }] }];
+      state.certs = [{}];
+      actId = 4;
+      renderActivities();
+      renderCerts();
+      render();
+    }
   
