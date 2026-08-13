@@ -354,7 +354,7 @@
       var s = 6 + 3 * i;
       var cap1 = effectiveCap(a, 0);
       var cap2 = effectiveCap(a, 1);
-      var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '[Name of Social Internship Activity]') + '</div>';
+      var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + (activityTitle(a.name) || '[Name of Social Internship Activity]') + '</div>';
       b += '<table class="act-meta">'
         + '<tr><td class="lbl">Theme</td><td>' + esc(a.theme || '[Theme of the Activity]') + '</td>'
         + '<td class="lbl">Starting Date</td><td>' + esc(a.start || '[DD/MM/YYYY]') + '</td></tr>'
@@ -399,7 +399,7 @@
             + '</div>'
             + '<div class="figno">Fig. ' + (k + 1) + '</div>';
         }
-        var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '') + ' PHOTOS / EVIDENCE</div>';
+        var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + (activityTitle(a.name) || '') + ' PHOTOS / EVIDENCE</div>';
         var dayTitle = 'DAY ' + (di + 1);
         var dayText = String(cap || '').replace(/^DAY\s*\d+\s*[:\-–.]?\s*/i, '').trim();
         function textCell() {
@@ -441,7 +441,7 @@
           return '<div class="pcap cframe"><div class="pcap-title">DAY ' + (di + 1) + '</div>'
             + '<div class="pcap-text">' + esc(t) + '</div></div>';
         }
-        var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + esc(a.name || '') + ' PHOTOS / EVIDENCE</div>';
+        var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + (activityTitle(a.name) || '') + ' PHOTOS / EVIDENCE</div>';
         b += '<table class="pgrid3"><tr><td>' + ccell(0, 0) + '</td><td>' + ccell(0, 1) + '</td><td>' + ccap(0, cap1) + '</td></tr>'
           + '<tr><td>' + ccell(1, 0) + '</td><td>' + ccell(1, 1) + '</td><td>' + ccap(1, cap2) + '</td></tr></table>';
         return pageShell(b, pn);
