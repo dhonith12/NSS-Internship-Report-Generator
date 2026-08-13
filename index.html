@@ -27,9 +27,13 @@
         title="Switch theme: Light / Dark / System">&#9684; Auto</button>
       <button class="btn btn-outline" onclick="loadDemo()">Load Demo</button>
       <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+      <button class="btn btn-outline" onclick="document.getElementById('reportFile').click()"
+        title="Upload a saved report (PDF/HTML/JSON) to edit">&#128229; Upload</button>
       <button class="btn btn-outline" id="editBtn" onclick="toggleEdit()"
         title="Edit the document text directly in the preview">&#9998; Edit Off</button>
       <button class="btn btn-download" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
+      <input type="file" id="reportFile" accept=".pdf,.html,.htm,.txt,.json" style="display:none"
+        onchange="handleReportUpload(event)">
     </div>
   </header>
 
@@ -65,10 +69,10 @@
         <div class="group">
           <div class="group-title">&#127891; Student Details</div>
           <div class="field"><label>Student Name <span class="req">*</span></label><input id="f_name"
-              placeholder="Student Name"></div>
+              placeholder="Student Name" required></div>
           <div class="grid-2">
             <div class="field"><label>Registration Number <span class="req">*</span></label><input id="f_regno"
-                placeholder="Registration Number"></div>
+                placeholder="Registration Number" required></div>
             <div class="field"><label>Class</label><input id="f_class" value="II B.Tech II Semester, CSE"></div>
           </div>
           <div class="grid-2">
@@ -82,12 +86,12 @@
           <div class="group-title">&#128205; Location / Community Profile</div>
           <div class="grid-2">
             <div class="field"><label>Village / Area Name <span class="req">*</span></label><input id="f_village"
-                placeholder="Village / Area Name"></div>
-            <div class="field"><label>Mandal</label><input id="f_mandal" placeholder="Mandal"></div>
+                placeholder="Sample Village" required></div>
+            <div class="field"><label>Mandal</label><input id="f_mandal" placeholder="Sample Mandal"></div>
           </div>
           <div class="grid-2">
-            <div class="field"><label>District</label><input id="f_district" placeholder="District"></div>
-            <div class="field"><label>State</label><input id="f_state" placeholder="State"></div>
+            <div class="field"><label>District</label><input id="f_district" placeholder="Sample District"></div>
+            <div class="field"><label>State</label><input id="f_state" placeholder="Sample State"></div>
           </div>
           <div class="field"><label>Pincode</label><input id="f_pincode" placeholder="Pincode"></div>
           <div class="grid-2">
@@ -178,14 +182,27 @@
       <div class="save-modal-options">
         <button class="save-opt" onclick="saveAsPdf()">
           <span class="save-opt-icon">&#128196;</span>
-          <span class="save-opt-label">Save as PDF</span>
-          <span class="save-opt-desc">Generates a print-ready PDF via your browser.</span>
+          <span class="save-opt-label">Save as PDF (re-uploadable)</span>
+          <span class="save-opt-desc">A4 PDF with the data embedded inside it. Upload this PDF back to edit all fields and photos.</span>
+        </button>
+        <button class="save-opt" onclick="saveAsPrintPdf()">
+          <span class="save-opt-icon">&#128438;</span>
+          <span class="save-opt-label">Browser Print PDF</span>
+          <span class="save-opt-desc">Uses your browser's print dialog (selectable text).</span>
         </button>
       </div>
       <p class="save-modal-hint">Tip: Use <kbd>Esc</kbd> to close this dialog.</p>
     </div>
   </div>
 
+    <div class="app-toast no-print" id="appToast" role="status"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function () { });
+        });
+      }
+    </script>
     <script src="js/app.js"></script>
 </body>
 

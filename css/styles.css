@@ -454,6 +454,13 @@
       opacity: .85
     }
 
+    .field input.invalid,
+    .field select.invalid,
+    .field textarea.invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, .15)
+    }
+
     .field input:focus,
     .field select:focus,
     .field textarea:focus {
@@ -840,7 +847,9 @@
       padding: 25.4mm 25.4mm 25.4mm 31.75mm;
       position: relative;
       text-align: justify;
-      text-justify: inter-word
+      text-justify: inter-word;
+      overflow-wrap: break-word;
+      word-break: break-word
     }
 
     .doc-page .college-head {
@@ -1135,6 +1144,15 @@
 
     .doc-page .pframe img:active {
       cursor: grabbing
+    }
+
+    .doc-stage:not(.editing) .doc-page .pctrl {
+      display: none
+    }
+
+    .doc-stage:not(.editing) .doc-page .pframe img {
+      cursor: default;
+      pointer-events: none
     }
 
     .doc-page .pctrl {
@@ -1596,10 +1614,6 @@
         padding: 12px
       }
 
-      .doc-page .content {
-        padding: 30mm 7mm 7mm
-      }
-
       .doc-page .college-head img {
         height: 12mm;
         width: 12mm
@@ -1713,7 +1727,7 @@
       }
 
       @page {
-        size: A4;
+        size: A4 portrait;
         margin: 0
       }
     }

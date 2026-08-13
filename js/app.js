@@ -32,7 +32,7 @@
       html += '<div class="field"><label>' + ACT_LABELS[1] + '</label><input id="act_' + a.id + '_theme" placeholder="' + ACT_LABELS[1] + '" value="' + escAttr(a.theme || '') + '"></div>';
       html += '<div class="grid-2"><div class="field"><label>' + ACT_LABELS[2] + '</label><input id="act_' + a.id + '_start" type="date" value="' + escAttr(a.start || '') + '"></div>'
         + '<div class="field"><label>' + ACT_LABELS[4] + '</label><input id="act_' + a.id + '_end" type="date" value="' + escAttr(a.end || '') + '"></div></div>';
-      html += '<div class="grid-2"><div class="field"><label>' + ACT_LABELS[3] + '</label><input id="act_' + a.id + '_location" placeholder="' + ACT_LABELS[3] + '" value="' + escAttr(a.location || '') + '"></div>'
+      html += '<div class="grid-2"><div class="field"><label>' + ACT_LABELS[3] + ' <span class="req">*</span></label><input id="act_' + a.id + '_location" placeholder="Sample Village, Sample Mandal, Sample District, State" value="' + escAttr(a.location || '') + '" required></div>'
         + '<div class="field"><label>' + ACT_LABELS[5] + '</label><input id="act_' + a.id + '_hours" placeholder="' + ACT_LABELS[5] + '" value="' + escAttr(a.hours || '') + '"></div></div>';
       ['Day 1', 'Day 2'].forEach(function (dayName, di) {
         html += '<div class="day-block"><h4>' + dayName + ' - 4 Photos</h4><div class="img-row">';
@@ -51,7 +51,21 @@
       return html;
     }
 
-    function renderActivities() {
+    function syncActivitiesFromDOM() {
+      state.activities.forEach(function (a) {
+        if (!$('act_' + a.id + '_name')) return;
+        a.name = rawVal('act_' + a.id + '_name');
+        a.theme = rawVal('act_' + a.id + '_theme');
+        a.start = rawVal('act_' + a.id + '_start');
+        a.end = rawVal('act_' + a.id + '_end');
+        a.location = rawVal('act_' + a.id + '_location');
+        a.hours = rawVal('act_' + a.id + '_hours');
+        a.cap0 = rawVal('act_' + a.id + '_cap0');
+        a.cap1 = rawVal('act_' + a.id + '_cap1');
+      });
+    }
+    function renderActivities(skipSync) {
+      if (!skipSync) { syncActivitiesFromDOM(); }
       var wrap = document.getElementById('activityCards');
       wrap.innerHTML = state.activities.map(activityCardHTML).join('');
     }
@@ -75,14 +89,15 @@
     function readImage(ev, aid, di, ki) {
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
-      var r = new FileReader();
-      r.onload = function () {
+      processUploadedImage(f, function (src, mime) {
         var a = state.activities.find(function (x) { return x.id === aid; });
-        a.days[di].img[ki] = { src: r.result, mime: f.type || 'image/jpeg', name: f.name };
+        if (!a) return;
+        a.days[di].img[ki] = { src: src, mime: mime, name: f.name };
         renderActivities();
         render();
-      };
-      r.readAsDataURL(f);
+        showToast('Photo added to Activity ' + aid + ' (' + f.name + ')');
+      });
+      if (ev.target) { ev.target.value = ''; }
     }
     function stripBlackFrame(src, cb) {
       var img = new Image();
@@ -124,7 +139,14 @@
     function saveCertDesc(idx, v) {
       if (state.certs[idx]) { state.certs[idx].desc = v; }
     }
+    function syncCertsFromDOM() {
+      state.certs.forEach(function (c, i) {
+        var el = $('cert_' + i + '_desc');
+        if (el && c) { c.desc = el.value; }
+      });
+    }
     function renderCerts() {
+      syncCertsFromDOM();
       var wrap = document.getElementById('certSlots');
       if (wrap) { wrap.innerHTML = state.certs.map(certSlotHTML).join(''); }
     }
@@ -142,29 +164,54 @@
     function readCertImage(ev, idx) {
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
-      var r = new FileReader();
-      r.onload = function () {
-        stripBlackFrame(r.result, function (src) {
-          state.certs[idx] = { src: src, mime: 'image/jpeg', name: f.name };
+      processUploadedImage(f, function (src, mime) {
+        stripBlackFrame(src, function (clean) {
+          var prev = state.certs[idx] || {};
+          state.certs[idx] = { desc: prev.desc || '', src: clean, mime: 'image/jpeg', name: f.name };
           renderCerts();
           render();
+          showToast('Certificate image added');
         });
-      };
-      r.readAsDataURL(f);
+      });
+      if (ev.target) { ev.target.value = ''; }
     }
     function readGeoImage(ev, idx) {
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
-      var r = new FileReader();
-      r.onload = function () {
-        state.geoImg[idx] = { src: r.result, mime: f.type || 'image/jpeg', name: f.name };
+      processUploadedImage(f, function (src, mime) {
+        state.geoImg[idx] = { src: src, mime: mime, name: f.name };
         var lbl = $('geoImgLbl' + idx);
         if (lbl) { lbl.textContent = 'Reupload File'; }
         var nm = $('geoImgName' + idx);
         if (nm) { nm.textContent = f.name; }
         render();
+        showToast('Village map image added');
+      });
+      if (ev.target) { ev.target.value = ''; }
+    }
+    /* Compress/resize uploaded photos so uploads are fast, reliable and work fully offline */
+    var MAX_IMG_DIM = 1800;
+    function processUploadedImage(f, cb) {
+      var r = new FileReader();
+      r.onerror = function () { cb('', f.type || 'image/jpeg'); };
+      r.onload = function () {
+        var src = r.result;
+        var img = new Image();
+        img.onerror = function () { cb(src, f.type || 'image/jpeg'); };
+        img.onload = function () {
+          var scale = Math.min(1, MAX_IMG_DIM / Math.max(img.width || 1, img.height || 1));
+          var cw = Math.max(1, Math.round((img.width || 0) * scale));
+          var ch = Math.max(1, Math.round((img.height || 0) * scale));
+          try {
+            var c = document.createElement('canvas');
+            c.width = cw; c.height = ch;
+            c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+            cb(c.toDataURL('image/jpeg', 0.85), 'image/jpeg');
+          } catch (e) { cb(src, f.type || 'image/jpeg'); }
+        };
+        img.src = src;
       };
-      r.readAsDataURL(f);
+      try { r.readAsDataURL(f); } catch (e) { cb('', f.type || 'image/jpeg'); }
     }
 
     /* ================= Utilities ================= */
@@ -244,7 +291,7 @@
         + '<td class="logo"><img src="@logo1@"></td>'
         + '<td><div class="center">'
         + '<div class="c1">R.V.R &amp; J.C. COLLEGE OF ENGINEERING (AUTONOMOUS)</div>'
-        + '<div class="c2">CHOWDAVARAM: GUNTUR-522016: ANDHRA PRADESH</div>'
+        + '<div class="c2">CHOWDAVARAM: GUNTUR-522016-&gt;522019: ANDHRA PRADESH</div>'
         + '<div class="c3">NATIONAL SERVICE SCHEME</div>'
         + '</div></td>'
         + '<td class="logo"><img src="@logo2@"></td>'
@@ -595,7 +642,7 @@
         var desc = (cert && cert.desc && String(cert.desc).trim()) ? cert.desc : 'The certificate issued for the successful completion of the NSS Social Internship Programme is attached below:';
         html += pageShell('<div class="section-h">ANNEXURES / CERTIFICATES</div>'
           + '<p><b>Certificate ' + (ci + 1) + ':</b> ' + esc(desc) + '</p>'
-          + ((cert && cert.src) ? '<img class="certimg" src="' + cert.src + '">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N + ci), 'annex');
+          + ((cert && cert.src) ? '<img class="certimg" data-ci="' + ci + '" src="' + cert.src + '">' : '<div class="img-placeholder cert-ph">Upload the certificate image</div>'), String(10 + 3 * N + ci), 'annex');
       });
 
       return html;
@@ -614,7 +661,7 @@
       });
       document.getElementById('docStage').innerHTML = html;
       fitDocScale();
-      fitCaptionBoxes();
+      fitPages();
       var filled = [d.name, d.regno, d.village].filter(Boolean).length;
       var imgs = d.acts.reduce(function (n, a) { return n + a.days.reduce(function (m, dd) { return m + dd.img.filter(function (x) { return x && x.src; }).length; }, 0); }, 0);
       document.getElementById('previewMeta').textContent =
@@ -658,7 +705,44 @@
         }
       }
     }
-    window.addEventListener('beforeprint', fitCaptionBoxes);
+
+    /* ================= Trim overflowing page content so it never leaves the A4 page ================= */
+    function fitPageContent(pg) {
+      var content = pg.querySelector('.content');
+      if (!content) return;
+      var pr = pg.getBoundingClientRect();
+      var cr = content.getBoundingClientRect();
+      if (cr.bottom <= pr.bottom + 2) return;
+      var els = content.querySelectorAll('p, li, td, h1, h2, .section-h, .sub-h, figcaption, .map-desc, .daycap-text, .pcap-text, .sign td, .pcap, .daycap, .certimg, .cert-ph, table');
+      var guard = 0;
+      while (cr.bottom > pr.bottom + 2 && guard < 60) {
+        var changed = false;
+        for (var k = 0; k < els.length; k++) {
+          var el = els[k];
+          var fs = parseFloat(getComputedStyle(el).fontSize) || 12;
+          if (fs <= 9) continue;
+          changed = true;
+          el.style.fontSize = (fs - 0.4) + 'pt';
+        }
+        if (!changed) break;
+        guard++;
+        cr = content.getBoundingClientRect();
+      }
+      if (cr.bottom > pr.bottom + 2) {
+        var pad = parseFloat(getComputedStyle(content).paddingBottom) || 25.4;
+        if (pad > 10) { content.style.paddingBottom = (pad - 2) + 'px'; }
+      }
+    }
+    function fitPages() {
+      fitCaptionBoxes();
+      var pages = document.querySelectorAll('#docStage .doc-page');
+      for (var i = 0; i < pages.length; i++) {
+        var pg = pages[i];
+        if (pg.classList.contains('cover')) continue;
+        fitPageContent(pg);
+      }
+    }
+    window.addEventListener('beforeprint', fitPages);
 
     /* ================= Photo adjust (zoom / pan) in preview ================= */
     function findPhoto(actId, di, ki) {
@@ -679,7 +763,7 @@
       if (reset) reset.style.display = (z !== 1 || (im.x || 0) !== 0 || (im.y || 0) !== 0) ? '' : 'none';
     }
     function onZoomClick(e) {
-      if (editingEnabled) return;
+      if (!editingEnabled) return;
       var b = e.target.closest('.pbtn');
       if (!b) return;
       var act = +b.dataset.act, di = +b.dataset.di, ki = +b.dataset.ki;
@@ -697,7 +781,7 @@
       if (frame) refreshCtrl(frame, im);
     }
     function onPhotoDown(e) {
-      if (editingEnabled) return;
+      if (!editingEnabled) return;
       var t = e.target;
       if (t.closest('.pctrl')) return;
       var img = t.closest('.pframe img');
@@ -739,6 +823,9 @@
       stage.addEventListener('click', onZoomClick);
       stage.addEventListener('mousedown', onPhotoDown);
       stage.addEventListener('touchstart', onPhotoDown, { passive: false });
+      stage.addEventListener('input', function () {
+        if (editingEnabled) { fitPages(); autoSave(); }
+      });
     })();
 
     /* ================= PDF-editor style edit mode ================= */
@@ -765,10 +852,29 @@
         btn.textContent = editingEnabled ? '\u2713 Editing ON' : '\u270E Edit Off';
         btn.title = editingEnabled ? 'Click again to exit edit mode' : 'Edit the document text directly in the preview';
       }
+      if (!editingEnabled && stage) { fitPages(); }
     }
 
     /* ================= Save As dialog (Ctrl+P) ================= */
+    var REQUIRED_FIELDS = [['f_name', 'Student Name'], ['f_regno', 'Registration Number'], ['f_village', 'Village / Area Name']];
+    function validateRequired() {
+      var first = null;
+      REQUIRED_FIELDS.forEach(function (r) {
+        var el = $(r[0]);
+        var bad = !el || !el.value.trim();
+        if (el) { el.classList.toggle('invalid', bad); }
+        if (bad && !first) { first = r; }
+      });
+      return first;
+    }
     function openSaveDialog() {
+      var miss = validateRequired();
+      if (miss) {
+        showToast('Please fill the required field: ' + miss[1]);
+        var el = $(miss[0]);
+        if (el) { el.focus(); }
+        return;
+      }
       var m = document.getElementById('saveModal');
       if (!m) { window.print(); return; }
       m.hidden = false;
@@ -780,13 +886,108 @@
       m.classList.remove('open');
       m.hidden = true;
     }
+    function saveAsPrintPdf() {
+      closeSaveDialog();
+      var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+      downloadTextFile((name ? name + '_' : '') + 'NSS_Report_data.html', buildStandaloneHtml());
+      showToast('Editable .html companion downloaded - upload it later to continue editing');
+      setTimeout(function () {
+        var orig = document.title;
+        document.title = (name ? name + '_' : '') + 'Nss_Report.pdf';
+        window.onafterprint = function () { document.title = orig; };
+        window.print();
+      }, 200);
+    }
+    var _nssLibs = {};
+    function nssLoadScript(src) {
+      return new Promise(function (resolve, reject) {
+        if (_nssLibs[src]) { resolve(); return; }
+        var s = document.createElement('script');
+        s.src = new URL(src, location.href).href;
+        s.onload = function () { _nssLibs[src] = true; resolve(); };
+        s.onerror = function () { reject(new Error('Failed to load ' + src)); };
+        document.head.appendChild(s);
+      });
+    }
+    function nssLoadAll(list) {
+      return list.reduce(function (p, s) { return p.then(function () { return nssLoadScript(s); }); }, Promise.resolve());
+    }
     function saveAsPdf() {
       closeSaveDialog();
       var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
-      var orig = document.title;
-      document.title = (name ? name + '_' : '') + 'Nss_Report.pdf';
-      window.onafterprint = function () { document.title = orig; };
-      window.print();
+      showToast('Generating PDF - please wait...');
+      return nssLoadAll(['js/pdfjs/html2canvas.min.js', 'js/pdfjs/jspdf.umd.min.js']).then(function () {
+        return generateSelfPdf(name);
+      }).then(function (pdfName) {
+        showToast('PDF saved with editable data - upload it here to edit again');
+      }).catch(function (e) {
+        showToast('PDF generation failed: ' + (e && e.message ? e.message : 'unknown error'));
+      });
+    }
+    function tokenizeProfileData(d) {
+      var t = deepCopy(d);
+      (t.activities || []).forEach(function (a) {
+        (a.days || []).forEach(function (dd, di) {
+          (dd.img || []).forEach(function (im, ki) {
+            if (im && im.src && im.src.indexOf('data:') === 0) { im.src = '@@P:' + a.id + '_' + di + '_' + ki + '@@'; }
+          });
+        });
+      });
+      (t.certs || []).forEach(function (c, ci) {
+        if (c && c.src && c.src.indexOf('data:') === 0) { c.src = '@@C:' + ci + '@@'; }
+      });
+      (t.geoImg || []).forEach(function (g, gi) {
+        if (g && g.src && g.src.indexOf('data:') === 0) { g.src = '@@M:' + gi + '@@'; }
+      });
+      return t;
+    }
+    function generateSelfPdf(name) {
+      var root = document.documentElement;
+      var prevScale = root.style.getPropertyValue('--docscale');
+      root.style.setProperty('--docscale', '1');
+      void document.body.offsetHeight;
+      var pages = Array.prototype.slice.call(document.querySelectorAll('.doc-page'));
+      var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait', compress: true });
+      var crops = [];
+      var firstDims = null;
+      var chain = Promise.resolve();
+      pages.forEach(function (pageEl, i) {
+        chain = chain.then(function () {
+          return html2canvas(pageEl, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+        }).then(function (canvas) {
+          showToast('Rendering page ' + (i + 1) + ' of ' + pages.length + '...');
+          var pr = pageEl.getBoundingClientRect();
+          var sx = canvas.width / pr.width, sy = canvas.height / pr.height;
+          pageEl.querySelectorAll('.pframe img[data-act]').forEach(function (im) {
+            var r = im.getBoundingClientRect();
+            crops.push({ k: 'P:' + im.getAttribute('data-act') + '_' + im.getAttribute('data-di') + '_' + im.getAttribute('data-ki'), page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
+          });
+          pageEl.querySelectorAll('.certimg[data-ci]').forEach(function (im) {
+            var r = im.getBoundingClientRect();
+            crops.push({ k: 'C:' + im.getAttribute('data-ci'), page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
+          });
+          pageEl.querySelectorAll('.mapimg').forEach(function (im) {
+            var r = im.getBoundingClientRect();
+            crops.push({ k: 'M:0', page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
+          });
+          if (!firstDims) { firstDims = { w: canvas.width, h: canvas.height }; }
+          if (i > 0) { doc.addPage('a4', 'portrait'); }
+          doc.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 595.28, 841.89);
+        });
+      });
+      return chain.then(function () {
+        root.style.setProperty('--docscale', prevScale);
+        fitDocScale();
+        var payload = { __nss__: 1, d: tokenizeProfileData(collectProfileData()), crops: crops, cw: firstDims ? firstDims.w : 0, ch: firstDims ? firstDims.h : 0 };
+        doc.setProperties({ title: 'NSS Report', subject: 'NSS Report - ' + (name || ''), keywords: JSON.stringify(payload) });
+        var pdfName = (name ? name + '_' : '') + 'NSS_Report.pdf';
+        nssDownloadBlob(pdfName, doc.output('blob'));
+        return pdfName;
+      }, function (e) {
+        root.style.setProperty('--docscale', prevScale);
+        fitDocScale();
+        throw e;
+      });
     }
     document.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
@@ -829,21 +1030,25 @@
       $('f_po').value = 'Dr. S J R K PADMINIVALLI V';
       clearSingleImages();
       state.activities = [
-        { id: 1, name: 'Activity 1 Name', theme: 'Environmental Conservation', start: '2026-05-01', location: 'Sample Village, Sample Mandal', end: '2026-05-02', hours: '8 Hours', days: [{ img: [] }, { img: [] }] },
-        { id: 2, name: 'Activity 2 Name', theme: 'Digital Literacy', start: '2026-05-03', location: 'Sample Village, Sample Mandal', end: '2026-05-04', hours: '8 Hours', days: [{ img: [] }, { img: [] }] },
-        { id: 3, name: 'Activity 3 Name', theme: 'Community Cleanliness', start: '2026-05-05', location: 'Sample Village, Sample Mandal', end: '2026-05-05', hours: '8 Hours', days: [{ img: [] }, { img: [] }] }
+        { id: 1, name: 'Activity 1 Name', theme: 'Environmental Conservation', start: '2026-05-01', location: 'Sample Village, Sample Mandal, Sample District, Sample State', end: '2026-05-02', hours: '8 Hours', days: [{ img: [] }, { img: [] }] },
+        { id: 2, name: 'Activity 2 Name', theme: 'Digital Literacy', start: '2026-05-03', location: 'Sample Village, Sample Mandal, Sample District, Sample State', end: '2026-05-04', hours: '8 Hours', days: [{ img: [] }, { img: [] }] },
+        { id: 3, name: 'Activity 3 Name', theme: 'Community Cleanliness', start: '2026-05-05', location: 'Sample Village, Sample Mandal, Sample District, Sample State', end: '2026-05-05', hours: '8 Hours', days: [{ img: [] }, { img: [] }] }
       ];
       actId = 4;
-      renderActivities();
+      renderActivities(true);
       render();
     }
 
+    function syncGeoLabels() {
+      for (var i = 0; i < 4; i++) {
+        var g = state.geoImg[i];
+        var l = $('geoImgLbl' + i); if (l) { l.textContent = (g && g.src) ? 'Reupload File' : 'Choose File'; }
+        var n = $('geoImgName' + i); if (n) { n.textContent = (g && g.name) || ''; }
+      }
+    }
     function clearSingleImages() {
       state.geoImg = [null, null, null, null]; state.certs = [{}];
-      for (var i = 0; i < 4; i++) {
-        var l = $('geoImgLbl' + i); if (l) { l.textContent = 'Choose File'; }
-        var n = $('geoImgName' + i); if (n) { n.textContent = ''; }
-      }
+      syncGeoLabels();
       renderCerts();
     }
     function resetForm() {
@@ -857,7 +1062,11 @@
       render();
     }
 
-    document.addEventListener('input', function () { if (!editingEnabled) render(); autoSave(); });
+    document.addEventListener('input', function (e) {
+      if (e.target && e.target.classList) { e.target.classList.remove('invalid'); }
+      if (!editingEnabled) render();
+      autoSave();
+    });
     document.addEventListener('change', function () { if (!editingEnabled) render(); autoSave(); });
     window.addEventListener('resize', function () { fitDocScale(); });
     window.addEventListener('scroll', function () {
@@ -904,7 +1113,9 @@
       else { window.addEventListener('load', function () { setTimeout(showToast, 300); }); }
     })();
 
-    /* ================= Silent auto-save (local, per device) ================= */
+    /* ================= Auto-save every field (text + images) with cookie fallback ================= */
+    var saveTimer = null;
+    var SAVE_KEY_AUTO = 'nss_auto';
     function profKey(name) { return 'nss_data_' + String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/gi, '_'); }
     function collectProfileData() {
       var d = {};
@@ -914,61 +1125,401 @@
           id: a.id, name: rawVal('act_' + a.id + '_name'), theme: rawVal('act_' + a.id + '_theme'),
           start: rawVal('act_' + a.id + '_start'), end: rawVal('act_' + a.id + '_end'),
           location: rawVal('act_' + a.id + '_location'), hours: rawVal('act_' + a.id + '_hours'),
-          cap0: rawVal('act_' + a.id + '_cap0'), cap1: rawVal('act_' + a.id + '_cap1')
+          cap0: rawVal('act_' + a.id + '_cap0'), cap1: rawVal('act_' + a.id + '_cap1'), days: a.days
         };
       });
-      d.certs = state.certs.map(function (c) { return { desc: (c && c.desc) || '' }; });
+      d.certs = state.certs.map(function (c) { return { desc: (c && c.desc) || '', src: (c && c.src) || null, mime: (c && c.mime) || '', name: (c && c.name) || '' }; });
+      d.geoImg = state.geoImg.map(function (g) {
+        return (g && g.src) ? { src: g.src, mime: g.mime || 'image/jpeg', name: g.name || '' } : null;
+      });
       return d;
     }
+    function deepCopy(o) { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return o; } }
+    function lightCopy(data) {
+      var t = deepCopy(data);
+      t.activities = (t.activities || []).map(function (a) {
+        a.days = (a.days || []).map(function (dd) { return { img: [] }; });
+        return a;
+      });
+      t.certs = (t.certs || []).map(function (c) { return { desc: (c && c.desc) || '' }; });
+      t.geoImg = [null, null, null, null];
+      return t;
+    }
     function autoSave() {
+      if (saveTimer) { clearTimeout(saveTimer); }
+      saveTimer = setTimeout(function () { doSave(); }, 500);
+    }
+    function doSave() {
       var nm = ($('f_name') && $('f_name').value.trim()) || '';
-      if (!nm) return;
+      var key = nm ? profKey(nm) : SAVE_KEY_AUTO;
+      var data = collectProfileData();
+      var light = lightCopy(data);
+      var storedFull = false;
       try {
-        localStorage.setItem(profKey(nm), JSON.stringify(collectProfileData()));
+        localStorage.setItem(key, JSON.stringify(data));
         localStorage.setItem('nss_last_user', nm);
+        storedFull = true;
       } catch (e) { }
+      if (!storedFull) {
+        try {
+          localStorage.setItem(key, JSON.stringify(light));
+          localStorage.setItem('nss_last_user', nm);
+        } catch (e) { }
+      }
+      try {
+        var lightJson = JSON.stringify(light);
+        if (lightJson.length <= COOKIE_CHUNK * 80) {
+          cookieChunkSave('nss_ck_' + key, lightJson);
+        } else {
+          cookieChunkSave('nss_ck_' + key, JSON.stringify(collectProfileTextOnly()));
+        }
+        cookieWrite('nss_last_user', nm);
+      } catch (e) { }
+    }
+    function collectProfileTextOnly() {
+      var d = collectProfileData();
+      d.activities = (d.activities || []).map(function (a) {
+        a.days = (a.days || []).map(function (dd) { return { img: [] }; });
+        return a;
+      });
+      d.certs = [];
+      d.geoImg = [];
+      return d;
+    }
+    function saveNow() {
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      doSave();
+    }
+    window.addEventListener('pagehide', saveNow);
+    window.addEventListener('beforeunload', saveNow);
+    function cookieWrite(k, v) {
+      try { document.cookie = encodeURIComponent(k) + '=' + encodeURIComponent(v) + ';path=/;max-age=' + (365 * 24 * 3600); } catch (e) { }
+    }
+    function cookieRead(k) {
+      try {
+        var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + encodeURIComponent(k) + '=([^;]*)'));
+        return m ? decodeURIComponent(m[1]) : null;
+      } catch (e) { return null; }
+    }
+    function cookieErase(k) { try { document.cookie = encodeURIComponent(k) + '=;path=/;max-age=0'; } catch (e) { } }
+    var COOKIE_CHUNK = 3000;
+    function cookieChunkSave(base, json) {
+      var total = Math.max(1, Math.ceil(json.length / COOKIE_CHUNK));
+      for (var i = 0; i < total; i++) { cookieWrite(base + '_' + i, json.substr(i * COOKIE_CHUNK, COOKIE_CHUNK)); }
+      cookieWrite(base + '_n', total);
+      for (var j = total; j < 60; j++) { cookieErase(base + '_' + j); }
+    }
+    function cookieChunkLoad(base) {
+      var n = parseInt(cookieRead(base + '_n') || '0', 10);
+      if (n <= 0) return null;
+      var out = '';
+      for (var i = 0; i < n; i++) {
+        var part = cookieRead(base + '_' + i);
+        if (part == null) return null;
+        out += part;
+      }
+      return out;
+    }
+    function loadSavedData(nm) {
+      var key = nm ? profKey(nm) : SAVE_KEY_AUTO;
+      try {
+        var raw = localStorage.getItem(key);
+        if (raw) { var d = JSON.parse(raw); if (d && typeof d === 'object') return d; }
+      } catch (e) { }
+      try {
+        var ck = cookieChunkLoad('nss_ck_' + key);
+        if (ck) { var d2 = JSON.parse(ck); if (d2 && typeof d2 === 'object') return d2; }
+      } catch (e) { }
+      return null;
+    }
+    function applyData(data) {
+      if (!data || typeof data !== 'object') return;
+      document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) {
+        if (data[el.id] != null) el.value = data[el.id];
+      });
+      var saved = Array.isArray(data.activities) ? data.activities : [];
+      state.activities = saved.map(function (a, i) {
+        var days = [];
+        if (Array.isArray(a && a.days)) {
+          a.days.forEach(function (dd) {
+            var imgs = (dd && Array.isArray(dd.img)) ? dd.img.map(function (im) {
+              return (im && im.src) ? { src: im.src, mime: im.mime || 'image/jpeg', name: im.name || '', z: im.z, x: im.x, y: im.y } : null;
+            }).filter(Boolean) : [];
+            days.push({ img: imgs });
+          });
+        }
+        while (days.length < 2) { days.push({ img: [] }); }
+        return {
+          id: i + 1, name: a && a.name, theme: a && a.theme, start: a && a.start,
+          end: a && a.end, location: a && a.location, hours: a && a.hours,
+          cap0: a && a.cap0, cap1: a && a.cap1, days: days
+        };
+      });
+      actId = state.activities.length + 1;
+      while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
+      state.certs = (Array.isArray(data.certs) && data.certs.length)
+        ? data.certs.map(function (c) {
+          return { desc: (c && c.desc) || '', src: (c && c.src) || null, mime: (c && c.mime) || '', name: (c && c.name) || '' };
+        })
+        : [{}];
+      state.geoImg = (Array.isArray(data.geoImg) && data.geoImg.length) ? data.geoImg.slice(0, 4).map(function (g) {
+        return (g && g.src) ? { src: g.src, mime: g.mime || 'image/jpeg', name: g.name || '' } : null;
+      }) : [null, null, null, null];
+      while (state.geoImg.length < 4) { state.geoImg.push(null); }
     }
     function restoreLastProfile() {
       try {
         var nm = '';
         try { nm = localStorage.getItem('nss_last_user') || ''; } catch (e) { }
-        if (!nm) return;
-        var data = null;
-        try { data = JSON.parse(localStorage.getItem(profKey(nm))); } catch (e) { }
-        if (!data || typeof data !== 'object') return;
-        document.querySelectorAll('.form-panel input,.form-panel textarea').forEach(function (el) {
-          if (data[el.id] != null) el.value = data[el.id];
-        });
-        var saved = Array.isArray(data.activities) ? data.activities : [];
-        state.activities = saved.map(function (a, i) {
-          return {
-            id: i + 1, name: a && a.name, theme: a && a.theme, start: a && a.start,
-            end: a && a.end, location: a && a.location, hours: a && a.hours,
-            cap0: a && a.cap0, cap1: a && a.cap1, days: [{ img: [] }, { img: [] }]
-          };
-        });
-        actId = state.activities.length + 1;
-        while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
-        state.certs = (Array.isArray(data.certs) && data.certs.length)
-          ? data.certs.map(function (c) { return { desc: (c && c.desc) || '' }; })
-          : [{}];
-      } catch (e) {
-        state.activities = [{ id: 1, days: [{ img: [] }, { img: [] }] }, { id: 2, days: [{ img: [] }, { img: [] }] }, { id: 3, days: [{ img: [] }, { img: [] }] }];
-        state.certs = [{}];
-        actId = 4;
+        if (!nm) { try { nm = cookieRead('nss_last_user') || ''; } catch (e2) { } }
+        var data = loadSavedData(nm);
+        if (!data) return;
+        applyData(data);
+      } catch (e) { }
+    }
+
+    /* ================= Upload a saved report / Download report as HTML ================= */
+    function handleReportUpload(ev) {
+      var f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
+        var pr = new FileReader();
+        pr.onload = function () {
+          restoreFromPdf(pr.result).then(function (res) {
+            showToast(res.ok ? 'Report restored from PDF - you can edit now'
+              : (res.reason === 'no-data' ? 'This PDF has no editable data. Use "Save as PDF" inside the app, or upload the .html companion.'
+                : 'Could not read this PDF: ' + res.reason));
+          }).catch(function (e) {
+            showToast('Could not read the PDF: ' + (e && e.message ? e.message : 'unknown error'));
+          });
+        };
+        pr.readAsArrayBuffer(f);
+        ev.target.value = '';
+        return;
       }
+      var r = new FileReader();
+      r.onload = function () {
+        var ok = restoreFromDocument(r.result);
+        showToast(ok ? 'Report restored from file - you can edit now' : 'No report data found in this file');
+      };
+      r.readAsText(f);
+      ev.target.value = '';
+    }
+    function restoreFromPdf(ab) {
+      return nssLoadAll(['js/pdfjs/pdf.min.js']).then(function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('js/pdfjs/pdf.worker.min.js', location.href).href;
+        return window.pdfjsLib.getDocument({ data: ab }).promise;
+      }).then(function (pdf) {
+        return pdf.getMetadata().then(function (meta) {
+          var raw = meta.info.Keywords || meta.info.keywords || '';
+          var payload;
+          try { payload = JSON.parse(raw); } catch (e) { payload = null; }
+          if (!payload || payload.__nss__ !== 1) { return { ok: false, reason: 'no-data' }; }
+          return { ok: true, pdf: pdf, payload: payload };
+        });
+      }).catch(function () {
+        return { ok: false, reason: 'unreadable' };
+      }).then(function (res) {
+        if (!res.ok) { return res; }
+        var pdf = res.pdf, payload = res.payload;
+        var crops = payload.crops || [], cw = payload.cw || 1, ch = payload.ch || 1;
+        var byPage = {};
+        crops.forEach(function (c) { (byPage[c.page] = byPage[c.page] || []).push(c); });
+        var dataURLs = {};
+        var pageNums = Object.keys(byPage).map(function (p) { return +p; });
+        var chain = Promise.resolve();
+        pageNums.forEach(function (pn) {
+          chain = chain.then(function () {
+            return pdf.getPage(pn);
+          }).then(function (page) {
+            var base = page.getViewport({ scale: 1 });
+            var scale = cw / base.width;
+            var vp = page.getViewport({ scale: scale });
+            var canvas = document.createElement('canvas');
+            canvas.width = Math.round(vp.width);
+            canvas.height = Math.round(vp.height);
+            return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise.then(function () {
+              var sx = canvas.width / cw, sy = canvas.height / ch;
+              byPage[pn].forEach(function (c) {
+                var x = Math.round(c.x * sx), y = Math.round(c.y * sy), w = Math.max(1, Math.round(c.w * sx)), h = Math.max(1, Math.round(c.h * sy));
+                var crop = document.createElement('canvas');
+                crop.width = w; crop.height = h;
+                crop.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+                dataURLs[c.k] = crop.toDataURL('image/jpeg', 0.92);
+              });
+            });
+          });
+        });
+        return chain.then(function () {
+          var d = payload.d;
+          var apply = function (src) {
+            if (typeof src === 'string' && src.indexOf('@@') === 0) {
+              var k = src.slice(2, -2);
+              return dataURLs[k] || src;
+            }
+            return src;
+          };
+          (d.activities || []).forEach(function (a) {
+            (a.days || []).forEach(function (dd) {
+              (dd.img || []).forEach(function (im) { if (im) { im.src = apply(im.src); } });
+            });
+          });
+          (d.certs || []).forEach(function (c) { if (c) { c.src = apply(c.src); } });
+          (d.geoImg || []).forEach(function (g) { if (g) { g.src = apply(g.src); } });
+          applyData(d);
+          renderActivities(true);
+          renderCerts();
+          render();
+          return { ok: true };
+        });
+      });
+    }
+    function restoreFromDocument(text) {
+      if (!text) return false;
+      try {
+        var m = text.match(/<script[^>]*id=["']nss-report-data["'][^>]*>([\s\S]*?)<\/script>/i);
+        if (m && m[1]) {
+          var data = JSON.parse(m[1].replace(/\\<\//g, '<\/'));
+          applyData(data);
+          renderActivities(true);
+          renderCerts();
+          render();
+          return true;
+        }
+      } catch (e) { }
+      try {
+        var json = JSON.parse(text);
+        if (json && typeof json === 'object' && Array.isArray(json.activities)) {
+          applyData(json);
+          renderActivities(true);
+          renderCerts();
+          render();
+          return true;
+        }
+      } catch (e) { }
+      return restoreFromHtmlText(text);
+    }
+    function restoreFromHtmlText(text) {
+      var doc;
+      try { doc = new DOMParser().parseFromString(text, 'text/html'); } catch (e) { return false; }
+      if (!doc) return false;
+      var got = false;
+      var fieldEls = doc.querySelectorAll('[id^="f_"]');
+      for (var i = 0; i < fieldEls.length; i++) {
+        var el = fieldEls[i];
+        var t = $(el.id);
+        if (t && el.value != null) { t.value = el.value; got = true; }
+      }
+      var acts = {};
+      var actEls = doc.querySelectorAll('[id^="act_"]');
+      for (var j = 0; j < actEls.length; j++) {
+        var ael = actEls[j];
+        var mm = /^act_(\d+)_(.*)$/.exec(ael.id);
+        if (!mm) continue;
+        var id = +mm[1], key = mm[2];
+        if (!acts[id]) acts[id] = { id: id, name: '', theme: '', start: '', end: '', location: '', hours: '', cap0: '', cap1: '', days: [{ img: [] }, { img: [] }] };
+        acts[id][key] = ael.value;
+        got = true;
+      }
+      var pImgs = doc.querySelectorAll('.pframe img[data-act][data-di][data-ki]');
+      for (var k = 0; k < pImgs.length; k++) {
+        var pi = pImgs[k];
+        var aid = +pi.getAttribute('data-act'), di = +pi.getAttribute('data-di'), ki = +pi.getAttribute('data-ki');
+        var src = pi.getAttribute('src');
+        if (acts[aid] && src && src.indexOf('data:') === 0) {
+          if (!acts[aid].days[di]) acts[aid].days[di] = { img: [] };
+          acts[aid].days[di].img[ki] = { src: src, mime: 'image/jpeg', name: 'photo.jpg' };
+          got = true;
+        }
+      }
+      var map = doc.querySelector('.mapimg');
+      if (map) {
+        var ms = map.getAttribute('src');
+        if (ms && ms.indexOf('data:') === 0 && ms.indexOf('@map@') < 0) {
+          state.geoImg[0] = { src: ms, mime: 'image/jpeg', name: 'map.jpg' };
+          got = true;
+        }
+      }
+      var certImgs = doc.querySelectorAll('.certimg');
+      var newCerts = [];
+      for (var c = 0; c < certImgs.length; c++) {
+        var cs = certImgs[c].getAttribute('src');
+        newCerts.push(cs ? { desc: '', src: cs, mime: 'image/jpeg', name: 'certificate.jpg' } : {});
+      }
+      if (newCerts.length) { state.certs = newCerts; got = true; }
+      if (got) {
+        var ids = Object.keys(acts);
+        if (ids.length) {
+          state.activities = ids.map(function (idk) { return acts[idk]; });
+          actId = state.activities.length + 1;
+          while (state.activities.length < 3) { state.activities.push({ id: actId++, days: [{ img: [] }, { img: [] }] }); }
+        }
+        syncGeoLabels();
+        renderActivities(true);
+        renderCerts();
+        render();
+      }
+      return got;
+    }
+    function showToast(msg) {
+      var t = document.getElementById('appToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._tm);
+      t._tm = setTimeout(function () { t.classList.remove('show'); }, 2600);
+    }
+    function buildStandaloneHtml() {
+      var d = collect();
+      var html = buildDocHTML(d);
+      html = html.replace(/@cover@/g, 'data:' + IMG.cover.mime + ';base64,' + IMG.cover.b64)
+        .replace(/@logo1@/g, 'data:' + IMG.logo1.mime + ';base64,' + IMG.logo1.b64)
+        .replace(/@logo2@/g, 'data:' + IMG.logo2.mime + ';base64,' + IMG.logo2.b64)
+        .replace(/@map@/g, (state.geoImg[0] && state.geoImg[0].src) || ('data:' + IMG.map.mime + ';base64,' + IMG.map.b64));
+      html = html.replace(/<div class="doc-page[\s\S]*?(?=<div class="doc-page|$)/g, function (pg) {
+        return '<div class="page-wrap">' + pg + '</div>';
+      });
+      var css = extractStyles();
+      var json = JSON.stringify(collectProfileData()).replace(/<\//g, '<\\/');
+      var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+      return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>NSS Report - ' + esc(name) + '</title>\n<style>' + css + '</style>\n</head>\n<body style="margin:0;background:#cbd5e1">\n<div style="padding:24px;max-width:1600px;margin:0 auto">' + html + '</div>\n<script id="nss-report-data" type="application/json">' + json + '</scr' + 'ipt>\n</body>\n</html>';
+    }
+    function downloadTextFile(filename, content, mimeType) {
+      var blob = new Blob([content], { type: mimeType || 'text/html;charset=utf-8' });
+      nssDownloadBlob(filename, blob);
+    }
+    function nssDownloadBlob(filename, blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); if (a.remove) a.remove(); }, 600);
+    }
+    function extractStyles() {
+      var out = [];
+      try {
+        for (var i = 0; i < document.styleSheets.length; i++) {
+          var sheet = document.styleSheets[i];
+          try {
+            var rules = sheet.cssRules || sheet.rules;
+            for (var j = 0; j < rules.length; j++) { out.push(rules[j].cssText); }
+          } catch (e) { }
+        }
+      } catch (e) { }
+      return out.join('\n');
     }
 
     try {
       restoreLastProfile();
-      renderActivities();
+      renderActivities(true);
       renderCerts();
       render();
     } catch (e) {
       state.activities = [{ id: 1, days: [{ img: [] }, { img: [] }] }, { id: 2, days: [{ img: [] }, { img: [] }] }, { id: 3, days: [{ img: [] }, { img: [] }] }];
       state.certs = [{}];
       actId = 4;
-      renderActivities();
+      renderActivities(true);
       renderCerts();
       render();
     }

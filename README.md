@@ -14,7 +14,7 @@
 [![No Frameworks](https://img.shields.io/badge/Frameworks-None-brightgreen?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Offline Ready](https://img.shields.io/badge/Works-100%25%20Offline-2dd4bf?style=for-the-badge)]()
 
-**✦ No server · No installation · No internet required ✦**
+**✦ No server · No installation · No internet required — loads instantly & works fully offline after the first visit ✦**
 
 > 🌐 **Try it live:** [dhonith12.github.io/NSS-Internship-Report-Generator](https://dhonith12.github.io/NSS-Internship-Report-Generator/)
 
@@ -54,7 +54,9 @@
 | 🔍 | **Zoom & Pan Photos** | Adjust any evidence photo inside its frame with + / − / reset, or drag it into place |
 | 📐 | **Uniform Image Boxes** | All four photo boxes on a page are identical in size, **including** the caption bar |
 | 🏷️ | **Figure Numbers Outside Images** | `Fig. 1`, `Fig. 2`… rendered cleanly below each frame |
-| 💾 | **Silent Auto-save (local)** | Every keystroke is saved **on this device only** and restored automatically on the next visit — no profile selector, no user action needed |
+| 💾 | **Silent Auto-save (local + cookies)** | Every keystroke is saved **on this device only** — in `localStorage` **and** chunked **cookies** — and restored automatically on the next visit, even in private / offline browsing. No profile selector, no user action needed |
+| 📶 | **Instant Offline (Service Worker)** | After the site loads once, a service worker caches the whole app so it opens **instantly and works 100% offline** with no internet — perfect for GitHub Pages / mobile |
+| 🚀 | **Fast Photo Uploads** | Uploaded photos are auto-compressed & resized on-device (max 1800px JPEG), so images embed, render and save **fast and reliably**, fully offline |
 | 📄 | **Smart PDF Filename** | Saving a PDF suggests `<StudentName>_Nss_Report.pdf` automatically |
 | 🌗 | **Light / Dark / Auto themes** | Dark mode keeps the document preview crisp and identical to light mode |
 | 📁 | **"Choose File" → "Reupload File"** | Upload slots show the selected file name (e.g. `1.jpg`) instead of a bulky preview |
@@ -115,7 +117,8 @@ No build step. No package manager. No internet connection. Just open and start t
 4. **Fine-tune photos** — use the on-frame **+ / − / reset** buttons or drag to pan each photo inside its frame.
 5. **Edit text directly** — click **✏ Edit** to type right into the document pages; images and headers stay locked.
 6. **Save as PDF** — click **📄 Save As** (or press `Ctrl+P`), choose *Save as PDF* in the print dialog — the suggested filename is `<StudentName>_Nss_Report.pdf`.
-7. **Keeps editing later** — everything you type is auto-saved silently **on this device**, so a refresh continues right where you left off.
+7. **Keeps editing later** — everything you type is auto-saved silently **on this device** (localStorage + cookies), so a refresh continues right where you left off.
+8. **Works offline too** — after the first full load the service worker caches everything, so the site opens instantly and keeps working with no internet.
 
 > 💡 The document page is scaled to **fit the preview pane** (`--docscale`) so you always see the *whole* page, while the actual printed output stays true-to-size A4.
 
@@ -127,8 +130,9 @@ No build step. No package manager. No internet connection. Just open and start t
 |---|---|---|
 | **Markup** | HTML5 | Semantic structure, inline SVG icons, forms |
 | **Styling** | CSS3 | Custom properties (themes), flexbox & grid, `@media` queries, `@page A4` print rules, `zoom` fit-to-width |
-| **Logic** | Vanilla JavaScript (ES5/ES6) | No frameworks — live DOM rendering, `FileReader` for uploads, `<canvas>` image processing (black-frame stripping), `localStorage` for theme |
+| **Logic** | Vanilla JavaScript (ES5/ES6) | No frameworks — live DOM rendering, `FileReader` for uploads, `<canvas>` image processing (black-frame stripping + auto-compress), `localStorage` + cookie auto-save |
 | **Output** | Browser Print → PDF | Zero external dependencies |
+| **Offline** | Service Worker (`sw.js`) | Caches the full app after first load — instant start and 100% offline on GitHub Pages / mobile |
 | **Images** | Embedded base64 | College logo, cover art, default map & certificate baked into `js/app.js` — fully offline |
 
 ---
@@ -145,6 +149,8 @@ NSS-Internship-Report-Generator/
 │
 ├── ⚙️  js/
 │    └── app.js            # All logic: state, live render, photo adjust, theme, demo, uploads, auto-save
+│
+├── ⚡ sw.js               # Service worker — offline cache (works after the first load)
 │
 └── 📘 README.md           # This file
 ```
@@ -176,7 +182,17 @@ Your choice is remembered automatically between visits.
 
 ## 💾 Saving & Data
 
-- **Silent auto-save (local)** — every keystroke is stored in this browser under the entered student name and restored automatically on the next visit. No profile selector, no messages — it just works. Photos are re-uploaded each session.
+- **Silent auto-save (local + cookies)** — every keystroke is stored in this browser under the entered student name and restored automatically on the next visit. Data is written to **both** `localStorage` and chunked **cookies**, so it keeps working in private browsing, on mobile, or when local storage is blocked. No profile selector, no messages — it just works. Photos are re-uploaded each session.
+
+- **On-close save** — your work is also saved when you close the tab / switch apps (`pagehide` / `beforeunload`), so nothing is lost.
+
+---
+
+## 📶 Offline & Performance (Service Worker)
+
+- After the first full load, a **service worker** (`sw.js`) caches `index.html`, `css/styles.css`, `js/app.js` and all PDF-export libraries.
+- Every later visit loads **instantly from cache** and works **fully offline** — including **Save as PDF** — even with no internet.
+- Uploaded photos are compressed/resized on-device (max 1800px JPEG) before embedding, which keeps uploads **fast and reliable** and reduces saved-file size.
 
 ---
 
