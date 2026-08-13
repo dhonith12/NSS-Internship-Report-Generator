@@ -969,7 +969,8 @@
       var chain = Promise.resolve();
       pages.forEach(function (pageEl, i) {
         chain = chain.then(function () {
-          return html2canvas(pageEl, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true });
+          var pr0 = pageEl.getBoundingClientRect();
+          return html2canvas(pageEl, { scale: 3, windowWidth: Math.ceil(pr0.width) + 8, windowHeight: Math.ceil(pr0.height) + 8, backgroundColor: '#ffffff', logging: false, useCORS: true });
         }).then(function (canvas) {
           showToast('Rendering page ' + (i + 1) + ' of ' + pages.length + '...');
           var pr = pageEl.getBoundingClientRect();
