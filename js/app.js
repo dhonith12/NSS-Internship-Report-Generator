@@ -194,7 +194,7 @@
       if (ev.target) { ev.target.value = ''; }
     }
     /* Compress/resize uploaded photos so uploads are fast, reliable and work fully offline */
-    var MAX_IMG_DIM = 1800;
+    var MAX_IMG_DIM = 2560;
     function processUploadedImage(f, cb) {
       var r = new FileReader();
       r.onerror = function () { cb('', f.type || 'image/jpeg'); };
@@ -210,7 +210,7 @@
             var c = document.createElement('canvas');
             c.width = cw; c.height = ch;
             c.getContext('2d').drawImage(img, 0, 0, cw, ch);
-            cb(c.toDataURL('image/jpeg', 0.85), 'image/jpeg');
+            cb(c.toDataURL('image/jpeg', 0.92), 'image/jpeg');
           } catch (e) { cb(src, f.type || 'image/jpeg'); }
         };
         img.src = src;
@@ -295,7 +295,7 @@
         + '<td class="logo"><img src="@logo1@"></td>'
         + '<td><div class="center">'
         + '<div class="c1">R.V.R &amp; J.C. COLLEGE OF ENGINEERING (AUTONOMOUS)</div>'
-        + '<div class="c2">CHOWDAVARAM: GUNTUR-522016-&gt;522019: ANDHRA PRADESH</div>'
+        + '<div class="c2">CHOWDAVARAM: GUNTUR-522019: ANDHRA PRADESH</div>'
         + '<div class="c3">NATIONAL SERVICE SCHEME</div>'
         + '</div></td>'
         + '<td class="logo"><img src="@logo2@"></td>'
