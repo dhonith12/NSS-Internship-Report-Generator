@@ -1614,25 +1614,6 @@
         padding: 12px
       }
 
-      .doc-page .college-head img {
-        height: 12mm;
-        width: 12mm
-      }
-
-      .doc-page .college-head {
-        width: 100%;
-        margin-left: 0;
-        margin-right: 0
-      }
-
-      .doc-page .college-head td.logo {
-        padding-left: 0 !important
-      }
-
-      .doc-page .section-h {
-        font-size: 14pt
-      }
-
       .app-header {
         padding: 12px 16px;
         gap: 10px
@@ -1720,6 +1701,30 @@
         min-height: 297mm;
         overflow: hidden;
         page-break-after: auto
+      }
+
+      .doc-page .college-head img {
+        height: 21mm !important;
+        width: 21mm !important
+      }
+
+      .doc-page .college-head td.logo {
+        width: 24mm !important;
+        padding-left: 0 !important
+      }
+
+      .doc-page .college-head {
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important
+      }
+
+      .doc-page .section-h {
+        font-size: 16pt !important
+      }
+
+      .doc-page .content {
+        padding: 25.4mm 25.4mm 25.4mm 31.75mm !important
       }
 
       .page-wrap:last-child {

@@ -471,7 +471,7 @@
       /* CERTIFICATE */
       var certCls = val('f_class');
       if (!/\bCSE\b/i.test(certCls)) certCls = certCls + ', CSE';
-      function lc(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+      function lc(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s; }
       function joinList(arr) {
         if (!arr || !arr.length) return '';
         if (arr.length === 1) return arr[0];
