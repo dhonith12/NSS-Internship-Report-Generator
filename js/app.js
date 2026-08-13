@@ -90,6 +90,7 @@
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
       processUploadedImage(f, function (src, mime) {
+        if (!src) { showToast('Could not read this image'); return; }
         var a = state.activities.find(function (x) { return x.id === aid; });
         if (!a) return;
         a.days[di].img[ki] = { src: src, mime: mime, name: f.name };
@@ -165,7 +166,9 @@
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
       processUploadedImage(f, function (src, mime) {
+        if (!src) { showToast('Could not read this image'); return; }
         stripBlackFrame(src, function (clean) {
+          if (!clean) { showToast('Could not process certificate image'); return; }
           var prev = state.certs[idx] || {};
           state.certs[idx] = { desc: prev.desc || '', src: clean, mime: 'image/jpeg', name: f.name };
           renderCerts();
@@ -179,6 +182,7 @@
       var f = ev.target.files && ev.target.files[0];
       if (!f) return;
       processUploadedImage(f, function (src, mime) {
+        if (!src) { showToast('Could not read this image'); return; }
         state.geoImg[idx] = { src: src, mime: mime, name: f.name };
         var lbl = $('geoImgLbl' + idx);
         if (lbl) { lbl.textContent = 'Reupload File'; }
@@ -446,9 +450,12 @@
       return pageShell(b, String(s)) + photoPage(0, cap1, String(s + 1)) + photoPage(1, cap2, String(s + 2));
     }
     function geoMap(d) {
-      var has = state.geoImg[0] && state.geoImg[0].src;
+      var mi = -1, g = null;
+      for (var i = 0; i < state.geoImg.length; i++) {
+        if (state.geoImg[i] && state.geoImg[i].src) { mi = i; g = state.geoImg[i]; break; }
+      }
       return '<figure class="map-fig">'
-        + (has ? '<img class="mapimg" src="@map@">' : '<div class="img-placeholder">Upload a village map / geographical image</div>')
+        + (g ? '<img class="mapimg" data-mi="' + mi + '" src="' + escAttr(g.src) + '">' : '<div class="img-placeholder">Upload a village map / geographical image</div>')
         + '<figcaption>Fig. 1: Map of ' + esc(d.village) + ' Village</figcaption></figure>';
     }
     function profileBody(d) {
@@ -967,9 +974,9 @@
             var r = im.getBoundingClientRect();
             crops.push({ k: 'C:' + im.getAttribute('data-ci'), page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
           });
-          pageEl.querySelectorAll('.mapimg').forEach(function (im) {
+          pageEl.querySelectorAll('.mapimg[data-mi]').forEach(function (im) {
             var r = im.getBoundingClientRect();
-            crops.push({ k: 'M:0', page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
+            crops.push({ k: 'M:' + im.getAttribute('data-mi'), page: i + 1, x: (r.left - pr.left) * sx, y: (r.top - pr.top) * sy, w: r.width * sx, h: r.height * sy });
           });
           if (!firstDims) { firstDims = { w: canvas.width, h: canvas.height }; }
           if (i > 0) { doc.addPage('a4', 'portrait'); }
