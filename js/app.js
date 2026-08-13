@@ -961,7 +961,7 @@
       var chain = Promise.resolve();
       pages.forEach(function (pageEl, i) {
         chain = chain.then(function () {
-          return html2canvas(pageEl, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+          return html2canvas(pageEl, { scale: 3, backgroundColor: '#ffffff', logging: false, useCORS: true });
         }).then(function (canvas) {
           showToast('Rendering page ' + (i + 1) + ' of ' + pages.length + '...');
           var pr = pageEl.getBoundingClientRect();
@@ -980,7 +980,7 @@
           });
           if (!firstDims) { firstDims = { w: canvas.width, h: canvas.height }; }
           if (i > 0) { doc.addPage('a4', 'portrait'); }
-          doc.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 595.28, 841.89);
+          doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 595.28, 841.89);
         });
       });
       return chain.then(function () {
