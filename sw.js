@@ -1,7 +1,7 @@
 
     /* Service Worker: caches the whole app so it runs fast and fully offline
        after the site has loaded once. Cache-first for instant loading. */
-    var CACHE_NAME = 'nss-report-cache-v6';
+    var CACHE_NAME = 'nss-report-cache-v7';
     var CACHE_URLS = [
       './',
       './index.html',

@@ -31,7 +31,7 @@
         title="Upload a saved report (PDF/HTML/JSON) to edit">&#128229; Upload</button>
       <button class="btn btn-outline" id="editBtn" onclick="toggleEdit()"
         title="Edit the document text directly in the preview">&#9998; Edit Off</button>
-      <button class="btn btn-download" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
+      <button class="btn btn-download" onclick="saveAsPdf()">&#128196; Download</button>
       <input type="file" id="reportFile" accept=".pdf,.html,.htm,.txt,.json" style="display:none"
         onchange="handleReportUpload(event)">
     </div>
@@ -129,7 +129,7 @@
         </div>
 
         <div class="actions-bar no-print">
-          <button class="btn btn-download" style="flex:1" onclick="openSaveDialog()">&#128196; Save As (Ctrl+P)</button>
+          <button class="btn btn-download" style="flex:1" onclick="saveAsPdf()">&#128196; Download</button>
         </div>
 
       </div>
@@ -172,26 +172,12 @@
     </div>
   </footer>
 
-  <!-- Save As (Ctrl+P) dialog -->
-  <div class="save-modal no-print" id="saveModal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle" hidden>
-    <div class="save-modal-backdrop" onclick="closeSaveDialog()"></div>
-    <div class="save-modal-card">
-      <button class="save-modal-close" onclick="closeSaveDialog()" title="Close (Esc)" aria-label="Close">&#10005;</button>
-      <h3 id="saveModalTitle">Save Report As</h3>
-      <p class="save-modal-sub">Press <kbd>Ctrl</kbd> + <kbd>P</kbd> anytime to save your report.</p>
-      <div class="save-modal-options">
-        <button class="save-opt" onclick="saveAsPdf()">
-          <span class="save-opt-icon">&#128196;</span>
-          <span class="save-opt-label">Save as PDF (re-uploadable)</span>
-          <span class="save-opt-desc">A4 PDF with the data embedded inside it. Upload this PDF back to edit all fields and photos.</span>
-        </button>
-        <button class="save-opt" onclick="saveAsPrintPdf()">
-          <span class="save-opt-icon">&#128438;</span>
-          <span class="save-opt-label">Browser Print PDF</span>
-          <span class="save-opt-desc">Uses your browser's print dialog (selectable text).</span>
-        </button>
-      </div>
-      <p class="save-modal-hint">Tip: Use <kbd>Esc</kbd> to close this dialog.</p>
+  <!-- Download progress overlay -->
+  <div class="download-overlay no-print" id="downloadOverlay" hidden>
+    <div class="download-card">
+      <div class="download-spinner"></div>
+      <div class="download-status" id="downloadStatus">Preparing PDF...</div>
+      <div class="download-bar"><div class="download-bar-fill" id="downloadBarFill"></div></div>
     </div>
   </div>
 

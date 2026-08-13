@@ -404,7 +404,7 @@
         }
         var b = '<div class="section-h">INTERNSHIP ACTIVITY ' + (i + 1) + ' : ' + (activityTitle(a.name) || '') + ' PHOTOS / EVIDENCE</div>';
         var dayTitle = 'DAY ' + (di + 1);
-        var dayText = String(cap || '').replace(/^DAY\s*\d+\s*[:\-–.]?\s*/i, '').trim();
+        var dayText = String(cap || '').replace(/^DAY\s*\d+\s*[:\-ï¿½.]?\s*/i, '').trim();
         function textCell() {
           return '<div class="pcap"><div class="pcap-title">' + dayTitle + '</div>'
             + '<div class="pcap-text">' + esc(dayText) + '</div></div>';
@@ -440,7 +440,7 @@
             + '<div class="figno">Fig. ' + (k + 1) + '</div>';
         }
         function ccap(di, cap) {
-          var t = String(cap || '').replace(/^DAY\s*\d+\s*[:\-–.]?\s*/i, '').trim();
+          var t = String(cap || '').replace(/^DAY\s*\d+\s*[:\-ï¿½.]?\s*/i, '').trim();
           return '<div class="pcap cframe"><div class="pcap-title">DAY ' + (di + 1) + '</div>'
             + '<div class="pcap-text">' + esc(t) + '</div></div>';
         }
@@ -873,7 +873,7 @@
       if (!editingEnabled && stage) { fitPages(); }
     }
 
-    /* ================= Save As dialog (Ctrl+P) ================= */
+    /* ================= Download / PDF export ================= */
     var REQUIRED_FIELDS = [['f_name', 'Student Name'], ['f_regno', 'Registration Number'], ['f_village', 'Village / Area Name']];
     function validateRequired() {
       var first = null;
@@ -885,34 +885,28 @@
       });
       return first;
     }
-    function openSaveDialog() {
-      var miss = validateRequired();
-      if (miss) {
-        showToast('Please fill the required field: ' + miss[1]);
-        var el = $(miss[0]);
-        if (el) { el.focus(); }
-        return;
-      }
-      var m = document.getElementById('saveModal');
-      if (!m) { window.print(); return; }
-      m.hidden = false;
-      m.classList.add('open');
+    function nssDownloadUI(msg, pct) {
+      var o = document.getElementById('downloadOverlay');
+      if (!o) return;
+      o.hidden = false;
+      var st = document.getElementById('downloadStatus');
+      var fill = document.getElementById('downloadBarFill');
+      if (typeof msg === 'string' && st) { st.textContent = msg; }
+      if (typeof pct === 'number' && fill) { fill.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
     }
-    function closeSaveDialog() {
-      var m = document.getElementById('saveModal');
-      if (!m) return;
-      m.classList.remove('open');
-      m.hidden = true;
-    }
-    function saveAsPrintPdf() {
-      closeSaveDialog();
-      var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+    function nssDownloadDone() {
+      nssDownloadUI('Download complete', 100);
       setTimeout(function () {
-        var orig = document.title;
-        document.title = (name ? name + '_' : '') + 'Nss_Report.pdf';
-        window.onafterprint = function () { document.title = orig; };
-        window.print();
-      }, 200);
+        var o = document.getElementById('downloadOverlay');
+        if (o) { o.hidden = true; }
+      }, 1200);
+    }
+    function nssDownloadFail() {
+      nssDownloadUI('Download failed', 0);
+      setTimeout(function () {
+        var o = document.getElementById('downloadOverlay');
+        if (o) { o.hidden = true; }
+      }, 2000);
     }
     var _nssLibs = {};
     function nssLoadScript(src) {
@@ -929,14 +923,21 @@
       return list.reduce(function (p, s) { return p.then(function () { return nssLoadScript(s); }); }, Promise.resolve());
     }
     function saveAsPdf() {
-      closeSaveDialog();
+      var miss = validateRequired();
+      if (miss) {
+        showToast('Please fill the required field: ' + miss[1]);
+        var el = $(miss[0]);
+        if (el) { el.focus(); }
+        return;
+      }
       var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
-      showToast('Generating PDF - please wait...');
+      nssDownloadUI('Preparing PDF...', 5);
       return nssLoadAll(['js/pdfjs/html2canvas.min.js', 'js/pdfjs/jspdf.umd.min.js']).then(function () {
         return generateSelfPdf(name);
-      }).then(function (pdfName) {
-        showToast('PDF saved with editable data - upload it here to edit again');
+      }).then(function () {
+        nssDownloadDone();
       }).catch(function (e) {
+        nssDownloadFail();
         showToast('PDF generation failed: ' + (e && e.message ? e.message : 'unknown error'));
       });
     }
@@ -977,7 +978,7 @@
           var pw = Math.ceil(pr0.width), ph = Math.ceil(pr0.height);
           return html2canvas(pageEl, { scale: 3, width: pw, height: ph, windowWidth: pw + 8, windowHeight: ph + 8, backgroundColor: '#ffffff', logging: false, useCORS: true });
         }).then(function (canvas) {
-          showToast('Rendering page ' + (i + 1) + ' of ' + pages.length + '...');
+          nssDownloadUI('Rendering page ' + (i + 1) + ' of ' + pages.length + '...', Math.round(((i + 1) / pages.length) * 82) + 5);
           var pr = pageEl.getBoundingClientRect();
           var sx = canvas.width / pr.width, sy = canvas.height / pr.height;
           pageEl.querySelectorAll('.pframe img[data-act]').forEach(function (im) {
@@ -1012,10 +1013,7 @@
     document.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        openSaveDialog();
-      }
-      if (e.key === 'Escape') {
-        closeSaveDialog();
+        saveAsPdf();
       }
     });
 
@@ -1495,7 +1493,7 @@
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      setTimeout(function () { URL.revokeObjectURL(a.href); if (a.remove) a.remove(); }, 600);
+      setTimeout(function () { URL.revokeObjectURL(a.href); if (a.remove) a.remove(); }, 15000);
     }
 
     try {
