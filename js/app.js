@@ -960,9 +960,16 @@
     function generateSelfPdf(name) {
       var root = document.documentElement;
       var prevScale = root.style.getPropertyValue('--docscale');
+      var pages = Array.prototype.slice.call(document.querySelectorAll('.doc-page'));
+      var prevZooms = pages.map(function (p) { return p.style.zoom; });
+      pages.forEach(function (p) { p.style.zoom = '1'; });
       root.style.setProperty('--docscale', '1');
       void document.body.offsetHeight;
-      var pages = Array.prototype.slice.call(document.querySelectorAll('.doc-page'));
+      function restoreZoom() {
+        pages.forEach(function (p, i) { p.style.zoom = prevZooms[i]; });
+        root.style.setProperty('--docscale', prevScale);
+        fitDocScale();
+      }
       var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait', compress: true });
       var crops = [];
       var firstDims = null;
@@ -970,7 +977,8 @@
       pages.forEach(function (pageEl, i) {
         chain = chain.then(function () {
           var pr0 = pageEl.getBoundingClientRect();
-          return html2canvas(pageEl, { scale: 3, windowWidth: Math.ceil(pr0.width) + 8, windowHeight: Math.ceil(pr0.height) + 8, backgroundColor: '#ffffff', logging: false, useCORS: true });
+          var pw = Math.ceil(pr0.width), ph = Math.ceil(pr0.height);
+          return html2canvas(pageEl, { scale: 3, width: pw, height: ph, windowWidth: pw + 8, windowHeight: ph + 8, backgroundColor: '#ffffff', logging: false, useCORS: true });
         }).then(function (canvas) {
           showToast('Rendering page ' + (i + 1) + ' of ' + pages.length + '...');
           var pr = pageEl.getBoundingClientRect();
@@ -993,16 +1001,14 @@
         });
       });
       return chain.then(function () {
-        root.style.setProperty('--docscale', prevScale);
-        fitDocScale();
+        restoreZoom();
         var payload = { __nss__: 1, d: tokenizeProfileData(collectProfileData()), crops: crops, cw: firstDims ? firstDims.w : 0, ch: firstDims ? firstDims.h : 0 };
         doc.setProperties({ title: 'NSS Report', subject: 'NSS Report - ' + (name || ''), keywords: JSON.stringify(payload) });
         var pdfName = (name ? name + '_' : '') + 'NSS_Report.pdf';
         nssDownloadBlob(pdfName, doc.output('blob'));
         return pdfName;
       }, function (e) {
-        root.style.setProperty('--docscale', prevScale);
-        fitDocScale();
+        restoreZoom();
         throw e;
       });
     }
