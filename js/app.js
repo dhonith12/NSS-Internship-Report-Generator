@@ -348,7 +348,10 @@
     function activityTitle(n) {
       var t = String(n || '').trim();
       if (/^demo$/i.test(t)) { return 'Demo'; }
-      return esc(t);
+      var words = t.split(/\s+/).filter(Boolean).map(function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      });
+      return esc(words.join(' '));
     }
     function activityBlock(a, i) {
       var s = 6 + 3 * i;
