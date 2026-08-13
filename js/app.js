@@ -437,7 +437,10 @@
           + '<tr><td>' + ccell(1, 0) + '</td><td>' + ccell(1, 1) + '</td><td>' + ccap(1, cap2) + '</td></tr></table>';
         return pageShell(b, pn);
       }
-      if (dayPhotos(0) <= 2 && dayPhotos(1) <= 2) {
+      function hasPhotoInSlot(di, from) {
+        return ((a.days[di] && a.days[di].img) || []).some(function (im, k) { return im && im.src && k >= from; });
+      }
+      if (dayPhotos(0) <= 2 && dayPhotos(1) <= 2 && !hasPhotoInSlot(0, 2) && !hasPhotoInSlot(1, 2)) {
         return pageShell(b, String(s)) + photoPage2(String(s + 1));
       }
       return pageShell(b, String(s)) + photoPage(0, cap1, String(s + 1)) + photoPage(1, cap2, String(s + 2));
