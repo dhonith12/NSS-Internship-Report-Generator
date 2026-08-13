@@ -889,8 +889,6 @@
     function saveAsPrintPdf() {
       closeSaveDialog();
       var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
-      downloadTextFile((name ? name + '_' : '') + 'NSS_Report_data.html', buildStandaloneHtml());
-      showToast('Editable .html companion downloaded - upload it later to continue editing');
       setTimeout(function () {
         var orig = document.title;
         document.title = (name ? name + '_' : '') + 'Nss_Report.pdf';
@@ -1469,25 +1467,6 @@
       clearTimeout(t._tm);
       t._tm = setTimeout(function () { t.classList.remove('show'); }, 2600);
     }
-    function buildStandaloneHtml() {
-      var d = collect();
-      var html = buildDocHTML(d);
-      html = html.replace(/@cover@/g, 'data:' + IMG.cover.mime + ';base64,' + IMG.cover.b64)
-        .replace(/@logo1@/g, 'data:' + IMG.logo1.mime + ';base64,' + IMG.logo1.b64)
-        .replace(/@logo2@/g, 'data:' + IMG.logo2.mime + ';base64,' + IMG.logo2.b64)
-        .replace(/@map@/g, (state.geoImg[0] && state.geoImg[0].src) || ('data:' + IMG.map.mime + ';base64,' + IMG.map.b64));
-      html = html.replace(/<div class="doc-page[\s\S]*?(?=<div class="doc-page|$)/g, function (pg) {
-        return '<div class="page-wrap">' + pg + '</div>';
-      });
-      var css = extractStyles();
-      var json = JSON.stringify(collectProfileData()).replace(/<\//g, '<\\/');
-      var name = (($('f_name') && $('f_name').value) || 'Report').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
-      return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>NSS Report - ' + esc(name) + '</title>\n<style>' + css + '</style>\n</head>\n<body style="margin:0;background:#cbd5e1">\n<div style="padding:24px;max-width:1600px;margin:0 auto">' + html + '</div>\n<script id="nss-report-data" type="application/json">' + json + '</scr' + 'ipt>\n</body>\n</html>';
-    }
-    function downloadTextFile(filename, content, mimeType) {
-      var blob = new Blob([content], { type: mimeType || 'text/html;charset=utf-8' });
-      nssDownloadBlob(filename, blob);
-    }
     function nssDownloadBlob(filename, blob) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -1495,19 +1474,6 @@
       document.body.appendChild(a);
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); if (a.remove) a.remove(); }, 600);
-    }
-    function extractStyles() {
-      var out = [];
-      try {
-        for (var i = 0; i < document.styleSheets.length; i++) {
-          var sheet = document.styleSheets[i];
-          try {
-            var rules = sheet.cssRules || sheet.rules;
-            for (var j = 0; j < rules.length; j++) { out.push(rules[j].cssText); }
-          } catch (e) { }
-        }
-      } catch (e) { }
-      return out.join('\n');
     }
 
     try {
