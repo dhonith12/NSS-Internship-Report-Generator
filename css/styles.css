@@ -782,8 +782,12 @@
     }
 
     .page-wrap {
-      display: flex;
-      margin: 0 auto 28px
+      position: relative;
+      width: calc(210mm * var(--docscale, 1));
+      height: calc(297mm * var(--docscale, 1));
+      margin: 0 auto 28px;
+      transform: scale(var(--docscale, 1));
+      transform-origin: top left
     }
 
     .page-wrap:last-child {
@@ -800,8 +804,7 @@
       box-shadow: 0 4px 24px rgba(2, 6, 23, .35);
       position: relative;
       overflow: hidden;
-      page-break-after: always;
-      zoom: var(--docscale, 1)
+      page-break-after: always
     }
 
     .doc-page.cover {
