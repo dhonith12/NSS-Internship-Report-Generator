@@ -345,6 +345,11 @@
       });
       return '<div class="doc-page cover"><img class="coverimg" src="@cover@">' + ov + '</div>';
     }
+    function activityTitle(n) {
+      var t = String(n || '').trim();
+      if (/^demo$/i.test(t)) { return 'Demo'; }
+      return esc(t);
+    }
     function activityBlock(a, i) {
       var s = 6 + 3 * i;
       var cap1 = effectiveCap(a, 0);
